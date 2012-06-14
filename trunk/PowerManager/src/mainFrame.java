@@ -45,6 +45,7 @@ public class mainFrame {
 		}
 	}
 	
+	Menu menu_DB;
 	/**
 	 * Create contents of the window.
 	 */	
@@ -95,69 +96,69 @@ public class mainFrame {
 		MenuItem SubmenuPortConfigSubmenuBR = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuBR.setText("Baud Rate");
 
-		Menu menu_2 = new Menu(SubmenuPortConfigSubmenuBR);
-		SubmenuPortConfigSubmenuBR.setMenu(menu_2);
+		Menu menu_BR = new Menu(SubmenuPortConfigSubmenuBR);
+		SubmenuPortConfigSubmenuBR.setMenu(menu_BR);
 
-		MenuItem menuItem19200 = new MenuItem(menu_2, SWT.RADIO);
+		MenuItem menuItem19200 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem19200.setSelection(true);
 		menuItem19200.setText("19200");
 
-		MenuItem menuItem9600 = new MenuItem(menu_2, SWT.RADIO);
+		MenuItem menuItem9600 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem9600.setText("9600");
 
 		MenuItem SubmenuPortConfigSubmenuPR = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuPR.setText("Parity");
 
-		Menu menu_3 = new Menu(SubmenuPortConfigSubmenuPR);
-		SubmenuPortConfigSubmenuPR.setMenu(menu_3);
+		Menu menu_PR = new Menu(SubmenuPortConfigSubmenuPR);
+		SubmenuPortConfigSubmenuPR.setMenu(menu_PR);
 
-		MenuItem menuItemNone = new MenuItem(menu_3, SWT.RADIO);
+		MenuItem menuItemNone = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemNone.setSelection(true);
 		menuItemNone.setText("NONE");
 
-		MenuItem menuItemOdd = new MenuItem(menu_3, SWT.RADIO);
+		MenuItem menuItemOdd = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemOdd.setText("ODD");
 
-		MenuItem menuItemEven = new MenuItem(menu_3, SWT.RADIO);
+		MenuItem menuItemEven = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemEven.setText("EVEN");
 
 		MenuItem SubmenuPortConfigSubmenuSB = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuSB.setText("Stop Bits");
 
-		Menu menu_4 = new Menu(SubmenuPortConfigSubmenuSB);
-		SubmenuPortConfigSubmenuSB.setMenu(menu_4);
+		Menu menu_SB = new Menu(SubmenuPortConfigSubmenuSB);
+		SubmenuPortConfigSubmenuSB.setMenu(menu_SB);
 
-		MenuItem menuItemZero = new MenuItem(menu_4, SWT.RADIO);
+		MenuItem menuItemZero = new MenuItem(menu_SB, SWT.RADIO);
 		menuItemZero.setText("0");
 
-		MenuItem menuItemOne = new MenuItem(menu_4, SWT.RADIO);
+		MenuItem menuItemOne = new MenuItem(menu_SB, SWT.RADIO);
 		menuItemOne.setSelection(true);
 		menuItemOne.setText("1");
 
-		MenuItem menuItemOnePointFive = new MenuItem(menu_4, SWT.RADIO);
+		MenuItem menuItemOnePointFive = new MenuItem(menu_SB, SWT.RADIO);
 		menuItemOnePointFive.setText("1,5");
 
-		MenuItem menuItemTwo = new MenuItem(menu_4, SWT.RADIO);
+		MenuItem menuItemTwo = new MenuItem(menu_SB, SWT.RADIO);
 		menuItemTwo.setText("2");
 
 		MenuItem SubmenuPortConfigSubmenuDB = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuDB.setText("Data Bits");
 
-		Menu menu_1 = new Menu(SubmenuPortConfigSubmenuDB);
-		SubmenuPortConfigSubmenuDB.setMenu(menu_1);
+		Menu menu_DB = new Menu(SubmenuPortConfigSubmenuDB);
+		SubmenuPortConfigSubmenuDB.setMenu(menu_DB);
 
-		MenuItem menuItemEigth = new MenuItem(menu_1, SWT.RADIO);
+		MenuItem menuItemEigth = new MenuItem(menu_DB, SWT.RADIO);
 		menuItemEigth.setSelection(true);
 		menuItemEigth.setText("8");
 
-		MenuItem menuItemSeven = new MenuItem(menu_1, SWT.RADIO);
+		MenuItem menuItemSeven = new MenuItem(menu_DB, SWT.RADIO);
 		menuItemSeven.setText("7");
 
 	}
 
 	protected void setupConnection() {
 		// TODO Auto-generated method stub
-		
+		menu_BR.
 	}
 
 
