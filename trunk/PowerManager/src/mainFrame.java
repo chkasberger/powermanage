@@ -1,9 +1,13 @@
 import java.util.ArrayList;
 
+import javax.swing.ButtonGroup;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
@@ -87,6 +91,8 @@ public class mainFrame {
 		Menu menuBar = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menuBar);
 
+		//Group menuItemGroup_BR = new Group(menuBar, 0);
+		
 		MenuItem menuBarSubmenuPortConfig = new MenuItem(menuBar, SWT.CASCADE);
 		menuBarSubmenuPortConfig.setText("Port Config");
 
@@ -106,6 +112,9 @@ public class mainFrame {
 		MenuItem menuItem9600 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem9600.setText("9600");
 
+		//ButtonGroup bntGroup = new ButtonGroup();
+		//bntGroup.add(menu_)
+		
 		MenuItem SubmenuPortConfigSubmenuPR = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuPR.setText("Parity");
 
@@ -160,6 +169,4 @@ public class mainFrame {
 		// TODO Auto-generated method stub
 		//menu_BR.
 	}
-
-
 }
