@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 
+import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 
 import org.eclipse.swt.SWT;
@@ -7,13 +8,25 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.events.ArmEvent;
+import org.eclipse.swt.events.ArmListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuEvent;
+import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+
+import java.awt.*;
+import java.awt.event.*;
 
 public class mainFrame {
 
@@ -72,11 +85,7 @@ public class mainFrame {
 
 		text = new Text(shell, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP);
 		text.setBounds(107, 12, 236, 218);
-		for (String s : lst) {
-			text.append(s + "\n\r");
-			comboPortList.add(s);
-		}
-
+		
 		/**
 		 * Create button.
 		 */
@@ -88,11 +97,12 @@ public class mainFrame {
 		 * Create menu.
 		 */
 
+		
+		
 		Menu menuBar = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menuBar);
 
 		//Group menuItemGroup_BR = new Group(menuBar, 0);
-		
 		MenuItem menuBarSubmenuPortConfig = new MenuItem(menuBar, SWT.CASCADE);
 		menuBarSubmenuPortConfig.setText("Port Config");
 
@@ -104,17 +114,23 @@ public class mainFrame {
 
 		Menu menu_BR = new Menu(SubmenuPortConfigSubmenuBR);
 		SubmenuPortConfigSubmenuBR.setMenu(menu_BR);
+		
+		//RadioItemListener rdoLst = new RadioItemListener();
 
+		
+		
+		
 		MenuItem menuItem19200 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem19200.setSelection(true);
 		menuItem19200.setText("19200");
-
+		menuItem19200.addSelectionListener(new RadioItemListener());
+	    
+		
 		MenuItem menuItem9600 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem9600.setText("9600");
-
-		//ButtonGroup bntGroup = new ButtonGroup();
-		//bntGroup.add(menu_)
+		menuItem9600.addSelectionListener(new RadioItemListener());
 		
+		//menu_BR.addListener(SWT.SELECTED, portConfigChangeListener);
 		MenuItem SubmenuPortConfigSubmenuPR = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuPR.setText("Parity");
 
@@ -124,7 +140,8 @@ public class mainFrame {
 		MenuItem menuItemNone = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemNone.setSelection(true);
 		menuItemNone.setText("NONE");
-
+		menuItemNone.setData(0);
+		
 		MenuItem menuItemOdd = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemOdd.setText("ODD");
 
@@ -161,7 +178,7 @@ public class mainFrame {
 		menuItemEigth.setText("8");
 
 		MenuItem menuItemSeven = new MenuItem(menu_DB, SWT.RADIO);
-		menuItemSeven.setText("7");
+		menuItemSeven.setText("7");			
 
 	}
 
@@ -169,4 +186,18 @@ public class mainFrame {
 		// TODO Auto-generated method stub
 		//menu_BR.
 	}
+}
+
+class RadioItemListener extends SelectionAdapter {
+    public void widgetSelected(SelectionEvent event) {
+      MenuItem item = (MenuItem) event.widget;
+      if (item.getSelection()) {
+    	  System.out.print(item.getText() + " is on.");
+      }      
+    }    
+}
+
+class MenuBarCreate{
+	
+
 }
