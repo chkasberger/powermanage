@@ -61,16 +61,20 @@ public class mainFrame {
 			}
 		}
 	}
-	
+
 	Menu menu_DB;
+
 	/**
 	 * Create contents of the window.
-	 */	
+	 */
 	protected void createContents() {
 		shell = new Shell();
 		shell.setTouchEnabled(true);
 		shell.setSize(450, 300);
 		shell.setText("SWT Application");
+
+		ArrayList<String> availableComPorts = new ArrayList<String>(
+				ComPort.listPorts());
 
 		Combo comboPortList = new Combo(shell, SWT.NONE);
 		comboPortList.addSelectionListener(new SelectionAdapter() {
@@ -79,13 +83,17 @@ public class mainFrame {
 				setupConnection();
 			}
 		});
+
 		comboPortList.setBounds(10, 10, 91, 23);
 
-		ArrayList<String> lst = new ArrayList<String>(ComPort.listPorts());
+		for (String s : availableComPorts) {
+			// text.append(s + "\n\r");
+			comboPortList.add(s);
+		}
 
 		text = new Text(shell, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP);
 		text.setBounds(107, 12, 236, 218);
-		
+
 		/**
 		 * Create button.
 		 */
@@ -97,12 +105,9 @@ public class mainFrame {
 		 * Create menu.
 		 */
 
-		
-		
 		Menu menuBar = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menuBar);
 
-		//Group menuItemGroup_BR = new Group(menuBar, 0);
 		MenuItem menuBarSubmenuPortConfig = new MenuItem(menuBar, SWT.CASCADE);
 		menuBarSubmenuPortConfig.setText("Port Config");
 
@@ -114,23 +119,17 @@ public class mainFrame {
 
 		Menu menu_BR = new Menu(SubmenuPortConfigSubmenuBR);
 		SubmenuPortConfigSubmenuBR.setMenu(menu_BR);
-		
-		//RadioItemListener rdoLst = new RadioItemListener();
 
-		
-		
-		
 		MenuItem menuItem19200 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem19200.setSelection(true);
 		menuItem19200.setText("19200");
 		menuItem19200.addSelectionListener(new RadioItemListener());
-	    
-		
+
 		MenuItem menuItem9600 = new MenuItem(menu_BR, SWT.RADIO);
 		menuItem9600.setText("9600");
 		menuItem9600.addSelectionListener(new RadioItemListener());
-		
-		//menu_BR.addListener(SWT.SELECTED, portConfigChangeListener);
+
+		// menu_BR.addListener(SWT.SELECTED, portConfigChangeListener);
 		MenuItem SubmenuPortConfigSubmenuPR = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuPR.setText("Parity");
 
@@ -141,12 +140,17 @@ public class mainFrame {
 		menuItemNone.setSelection(true);
 		menuItemNone.setText("NONE");
 		menuItemNone.setData(0);
-		
+		menuItemNone.addSelectionListener(new RadioItemListener());
+
 		MenuItem menuItemOdd = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemOdd.setText("ODD");
+		menuItemOdd.setData(1);
+		menuItemOdd.addSelectionListener(new RadioItemListener());
 
 		MenuItem menuItemEven = new MenuItem(menu_PR, SWT.RADIO);
 		menuItemEven.setText("EVEN");
+		menuItemEven.setData(2);
+		menuItemEven.addSelectionListener(new RadioItemListener());
 
 		MenuItem SubmenuPortConfigSubmenuSB = new MenuItem(menu, SWT.CASCADE);
 		SubmenuPortConfigSubmenuSB.setText("Stop Bits");
@@ -178,26 +182,12 @@ public class mainFrame {
 		menuItemEigth.setText("8");
 
 		MenuItem menuItemSeven = new MenuItem(menu_DB, SWT.RADIO);
-		menuItemSeven.setText("7");			
+		menuItemSeven.setText("7");
 
 	}
 
 	protected void setupConnection() {
 		// TODO Auto-generated method stub
-		//menu_BR.
+		// menu_BR.
 	}
-}
-
-class RadioItemListener extends SelectionAdapter {
-    public void widgetSelected(SelectionEvent event) {
-      MenuItem item = (MenuItem) event.widget;
-      if (item.getSelection()) {
-    	  System.out.print(item.getText() + " is on.");
-      }      
-    }    
-}
-
-class MenuBarCreate{
-	
-
 }

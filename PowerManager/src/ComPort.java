@@ -8,144 +8,141 @@ import java.util.*;
 import gnu.io.*;
 
 public class ComPort {
-	static Enumeration<?>		portList;
-	static CommPortIdentifier	portId;
-	static String				messageString = "Hello, world!";
-	static SerialPort			serialPort;
-	static OutputStream			outputStream;
-	static boolean				outputBufferEmptyFlag = false;
-    /**
-     * Method declaration
-     *
-     *
-     * @param string
-     *
-     * @see
-     */
-	public static ArrayList<String> listPorts(){
-		
-        ArrayList<String> portList = new ArrayList<String>();
-        
-        @SuppressWarnings("unchecked")
-        java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
-        
-        while ( portEnum.hasMoreElements() ) 
-        {
-            CommPortIdentifier portIdentifier = portEnum.nextElement();            
-            //portList.add(portIdentifier.getName()  +  " - " +  getPortTypeName(portIdentifier.getPortType()) + "\n\r");
-            portList.add(portIdentifier.getName());
-        }   
-        
-        for(String s : portList){
-        	System.out.println(s);
-        }
+	static Enumeration<?> portList;
+	static CommPortIdentifier portId;
+	static String messageString = "Hello, world!";
+	static SerialPort serialPort;
+	static OutputStream outputStream;
+	static boolean outputBufferEmptyFlag = false;
 
-        return portList;
-    }       
+	/**
+	 * Method declaration
+	 * 
+	 * 
+	 * @param string
+	 * 
+	 * @see
+	 */
+	public static ArrayList<String> listPorts() {
 
-	private static String getPortTypeName ( int portType )
-    {
-        switch ( portType )
-        {
-            case CommPortIdentifier.PORT_I2C:
-                return "I2C";
-            case CommPortIdentifier.PORT_PARALLEL:
-                return "Parallel";
-            case CommPortIdentifier.PORT_RAW:
-                return "Raw";
-            case CommPortIdentifier.PORT_RS485:
-                return "RS485";
-            case CommPortIdentifier.PORT_SERIAL:
-                return "Serial";
-            default:
-                return "unknown type";
-        }
-    }
-	
-    public static void open(String[] port) {
-	boolean portFound = false;
-	//String  defaultPort = "/dev/term/a";
-	String  defaultPort = "COM1";
+		ArrayList<String> portList = new ArrayList<String>();
 
-	if (port.length > 0) {
-	    defaultPort = port[0];
-	} 
+		@SuppressWarnings("unchecked")
+		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier
+				.getPortIdentifiers();
 
-	portList = CommPortIdentifier.getPortIdentifiers();
+		while (portEnum.hasMoreElements()) {
+			CommPortIdentifier portIdentifier = portEnum.nextElement();
+			// portList.add(portIdentifier.getName() + " - " +
+			// getPortTypeName(portIdentifier.getPortType()) + "\n\r");
+			portList.add(portIdentifier.getName());
+		}
 
-	while (portList.hasMoreElements()) {
-	    portId = (CommPortIdentifier) portList.nextElement();
+		for (String s : portList) {
+			System.out.println(s);
+		}
 
-	    if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+		return portList;
+	}
 
-		if (portId.getName().equals(defaultPort)) {
-		    System.out.println("Found port " + defaultPort);
+	private static String getPortTypeName(int portType) {
+		switch (portType) {
+		case CommPortIdentifier.PORT_I2C:
+			return "I2C";
+		case CommPortIdentifier.PORT_PARALLEL:
+			return "Parallel";
+		case CommPortIdentifier.PORT_RAW:
+			return "Raw";
+		case CommPortIdentifier.PORT_RS485:
+			return "RS485";
+		case CommPortIdentifier.PORT_SERIAL:
+			return "Serial";
+		default:
+			return "unknown type";
+		}
+	}
 
-		    portFound = true;
+	public static void open(String[] port) {
+		boolean portFound = false;
+		// String defaultPort = "/dev/term/a";
+		String defaultPort = "COM1";
 
-		    try {
-			serialPort = 
-			    (SerialPort) portId.open("SimpleWrite", 2000);
-		    } catch (PortInUseException e) {
-			System.out.println("Port in use.");
+		if (port.length > 0) {
+			defaultPort = port[0];
+		}
 
-			continue;
-		    } 
+		portList = CommPortIdentifier.getPortIdentifiers();
 
-		    try {
-			outputStream = serialPort.getOutputStream();
-		    } catch (IOException e) {}
+		while (portList.hasMoreElements()) {
+			portId = (CommPortIdentifier) portList.nextElement();
 
-		    try {
-			serialPort.setSerialPortParams(9600, 
-						       SerialPort.DATABITS_8, 
-						       SerialPort.STOPBITS_1, 
-						       SerialPort.PARITY_NONE);
-		    } catch (UnsupportedCommOperationException e) {}
-	
+			if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
 
-		    try {
-		    	serialPort.notifyOnOutputEmpty(true);
-		    } catch (Exception e) {
-			System.out.println("Error setting event notification");
-			System.out.println(e.toString());
-			System.exit(-1);
-		    }
-		    
-		    
+				if (portId.getName().equals(defaultPort)) {
+					System.out.println("Found port " + defaultPort);
 
-		} 
-	    } 
-	} 
+					portFound = true;
 
-	if (!portFound) {
-	    System.out.println("port " + defaultPort + " not found.");
-	} 
-    } 
-    
-    public static void close(){
-    	try {
-		       Thread.sleep(2000);  // Be sure data is xferred before closing
-		    } catch (Exception e) {}
-		    serialPort.close();
-		    System.exit(1);
-    }
-    
-    public static void write(String messageString) {
-    	
-	    System.out.println(
-		    	"Writing \""+messageString+"\" to "
-			+serialPort.getName());
+					try {
+						serialPort = (SerialPort) portId.open("SimpleWrite",
+								2000);
+					} catch (PortInUseException e) {
+						System.out.println("Port in use.");
 
-		    try {
+						continue;
+					}
+
+					try {
+						outputStream = serialPort.getOutputStream();
+					} catch (IOException e) {
+					}
+
+					try {
+						serialPort.setSerialPortParams(9600,
+								SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
+								SerialPort.PARITY_NONE);
+					} catch (UnsupportedCommOperationException e) {
+					}
+
+					try {
+						serialPort.notifyOnOutputEmpty(true);
+					} catch (Exception e) {
+						System.out.println("Error setting event notification");
+						System.out.println(e.toString());
+						System.exit(-1);
+					}
+				}
+			}
+		}
+
+		if (!portFound) {
+			System.out.println("port " + defaultPort + " not found.");
+		}
+	}
+
+	public static void close() {
+		try {
+			Thread.sleep(2000); // Be sure data is xferred before closing
+		} catch (Exception e) {
+		}
+		serialPort.close();
+		System.exit(1);
+	}
+
+	public static void write(String messageString) {
+
+		System.out.println("Writing \"" + messageString + "\" to "
+				+ serialPort.getName());
+
+		try {
 			outputStream.write(messageString.getBytes());
-		    } catch (IOException e) {		   		    	
-		    }
-    }
+		} catch (IOException e) {
+		}
+	}
 
-    public static void write(List<String> messageList){
-    	for(String s : messageList){
-    		write(s);    		
-    	}
-    }
+	public static void write(List<String> messageList) {
+		for (String s : messageList) {
+			write(s);
+		}
+	}
 }
