@@ -2,12 +2,17 @@ import java.io.*;
 //import java.lang.reflect.Array;
 import java.util.*;
 
+import org.apache.log4j.net.SyslogAppender;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.MenuItem;
+
 //import com.sun.org.apache.bcel.internal.generic.ARRAYLENGTH;
 //import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import gnu.io.*;
 
-public class ComPort {
+public class ComPortSelection extends SelectionAdapter {
 	static Enumeration<?> portList;
 	static CommPortIdentifier portId;
 	static String messageString = "Hello, world!";
@@ -23,6 +28,19 @@ public class ComPort {
 	 * 
 	 * @see
 	 */
+	private int x = 0;
+
+	public void widgetSelected(SelectionEvent event) {
+		MenuItem item = (MenuItem) event.widget;
+		if (item.getSelection()) {
+
+			System.out.print(item.getText() + " selected.\n\rInstance called "
+					+ x + " times\n\r");
+			x++;
+			open("");
+		}
+	}
+
 	public static ArrayList<String> listPorts() {
 
 		ArrayList<String> portList = new ArrayList<String>();
@@ -40,6 +58,7 @@ public class ComPort {
 
 		for (String s : portList) {
 			System.out.println(s);
+			SyslogAppender logger = new SyslogAppender();
 		}
 
 		return portList;
@@ -62,13 +81,13 @@ public class ComPort {
 		}
 	}
 
-	public static void open(String[] port) {
+	public static void open(String port) {
 		boolean portFound = false;
 		// String defaultPort = "/dev/term/a";
-		String defaultPort = "COM1";
+		String defaultPort = "COM5";
 
-		if (port.length > 0) {
-			defaultPort = port[0];
+		if (port.length() > 0) {
+			defaultPort = port;
 		}
 
 		portList = CommPortIdentifier.getPortIdentifiers();
@@ -86,6 +105,7 @@ public class ComPort {
 					try {
 						serialPort = (SerialPort) portId.open("SimpleWrite",
 								2000);
+						System.out.println("Port selected.");
 					} catch (PortInUseException e) {
 						System.out.println("Port in use.");
 
