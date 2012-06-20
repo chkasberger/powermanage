@@ -81,7 +81,7 @@ public class ComPortSelection extends SelectionAdapter {
 		}
 	}
 
-	public static void open(String port) {
+	public void open(String port) {
 		boolean portFound = false;
 		// String defaultPort = "/dev/term/a";
 		String defaultPort = "COM5";
@@ -140,7 +140,7 @@ public class ComPortSelection extends SelectionAdapter {
 		}
 	}
 
-	public static void close() {
+	public void close() {
 		try {
 			Thread.sleep(2000); // Be sure data is xferred before closing
 		} catch (Exception e) {

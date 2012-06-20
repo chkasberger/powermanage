@@ -88,6 +88,7 @@ public class mainFrame {
 				display.sleep();
 			}
 		}
+		comPortSelection.close();
 	}
 
 	/**
@@ -107,7 +108,7 @@ public class mainFrame {
 			
 			//String[] str = {"COM5"};
 			public void widgetSelected(SelectionEvent e) {
-				ComPortSelection.open("");
+				comPortSelection.open("");
 				setupConnection();
 			}
 		});
