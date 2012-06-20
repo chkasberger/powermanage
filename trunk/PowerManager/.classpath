@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.eclipse.ui.workbench_3.7.1.v20120104-1859.jar" sourcepath="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.eclipse.ui.workbench_3.7.1.v20120104-1859.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/com.ibm.icu_4.4.2.v20110823.jar" sourcepath="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/com.ibm.icu_4.4.2.v20110823.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.eclipse.ui.forms_3.5.101.v20111011-1919.jar" sourcepath="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.eclipse.ui.forms_3.5.101.v20111011-1919.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.apache.log4j_1.2.15.v201012070815.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
