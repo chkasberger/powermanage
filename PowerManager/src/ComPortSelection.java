@@ -13,58 +13,101 @@ import org.eclipse.swt.widgets.MenuItem;
 import gnu.io.*;
 
 public class ComPortSelection extends SelectionAdapter {
-	static Enumeration<?> portList;
-	static CommPortIdentifier portId;
-	static String messageString = "Hello, world!";
-	static SerialPort serialPort;
-	static OutputStream outputStream;
-	static boolean outputBufferEmptyFlag = false;
+	Enumeration<?> portList;
+	CommPortIdentifier portId;
+	String messageString = "Hello, world!";
+	SerialPort serialPort;
+	OutputStream outputStream;
+	boolean outputBufferEmptyFlag = false;
+	boolean connected;
+	String connectionStatusInfo;
+	String portName;
+	int baudRate;
+	int parity;
+	int stopBits;
+	int dataBits;
 
-	/**
-	 * Method declaration
-	 * 
-	 * 
-	 * @param string
-	 * 
-	 * @see
-	 */
-	private int x = 0;
+	public boolean isConnected() {
+		return this.connected;
+	}
+
+	public String getConnectionStatusInfo() {
+		return this.connectionStatusInfo;
+	}
+
+	public String getPortName() {
+		return this.portName;
+	}
+
+	public void setPortName(String portName) {
+		this.portName = portName;
+
+	}
+
+	public int getBaudRate() {
+		return this.baudRate;
+	}
+
+	public void setBaudRate(int baudRate) {
+		this.baudRate = baudRate;
+		//serialPort.setBaudBase(this.baudRate);
+		changeConfig();
+	}
+
+	public int getParity() {
+		return this.parity;
+	}
+
+	public void setParity(int parity) {
+		this.parity = parity;
+	}
+
+	public int getStopBits() {
+		return this.stopBits;
+	}
+
+	public void setStopBits(int stopBits) {
+		this.stopBits = stopBits;
+	}
+
+	public int getDataBits() {
+		return this.dataBits;
+	}
+
+	public void setDataBits(int dataBits) {
+		this.dataBits = dataBits;
+	}
+
+	int x = 0;
 
 	public void widgetSelected(SelectionEvent event) {
 		MenuItem item = (MenuItem) event.widget;
 		if (item.getSelection()) {
 
-			System.out.print(item.getText() + " selected.\n\rInstance called "
-					+ x + " times\n\r");
+			System.out.print(item.getText() + " selected.\n\rInstance called " + x + " times\n\r");
 			x++;
 			open("");
 		}
 	}
 
-	public static ArrayList<String> listPorts() {
-
+	public ArrayList<String> listPorts() {
 		ArrayList<String> portList = new ArrayList<String>();
-
 		@SuppressWarnings("unchecked")
-		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier
-				.getPortIdentifiers();
+		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
 
 		while (portEnum.hasMoreElements()) {
 			CommPortIdentifier portIdentifier = portEnum.nextElement();
-			// portList.add(portIdentifier.getName() + " - " +
-			// getPortTypeName(portIdentifier.getPortType()) + "\n\r");
 			portList.add(portIdentifier.getName());
 		}
 
 		for (String s : portList) {
 			System.out.println(s);
-			SyslogAppender logger = new SyslogAppender();
 		}
 
 		return portList;
 	}
 
-	private static String getPortTypeName(int portType) {
+	private String getPortTypeName(int portType) {
 		switch (portType) {
 		case CommPortIdentifier.PORT_I2C:
 			return "I2C";
@@ -81,63 +124,74 @@ public class ComPortSelection extends SelectionAdapter {
 		}
 	}
 
-	public void open(String port) {
+	private void changeConfig(){
+		open(this.portName);
+	}
+	public boolean open(String portName) {
 		boolean portFound = false;
 		// String defaultPort = "/dev/term/a";
-		String defaultPort = "COM5";
 
-		if (port.length() > 0) {
-			defaultPort = port;
-		}
+		if (portName.length() > 0) {
+			this.portName = portName;
 
-		portList = CommPortIdentifier.getPortIdentifiers();
+			
+			
+			
+			portList = CommPortIdentifier.getPortIdentifiers();
 
-		while (portList.hasMoreElements()) {
-			portId = (CommPortIdentifier) portList.nextElement();
+			while (portList.hasMoreElements()) {
+				portId = (CommPortIdentifier) portList.nextElement();
 
-			if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+				if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
 
-				if (portId.getName().equals(defaultPort)) {
-					System.out.println("Found port " + defaultPort);
+					if (portId.getName().equals(this.portName)) {
+						System.out.println("Found port " + this.portName);
 
-					portFound = true;
+						portFound = true;
 
-					try {
-						serialPort = (SerialPort) portId.open("SimpleWrite",
-								2000);
-						System.out.println("Port selected.");
-					} catch (PortInUseException e) {
-						System.out.println("Port in use.");
+						try {
+							serialPort = (SerialPort) portId.open("SimpleWrite", 2000);
+							System.out.println("Port selected.");
+							connectionStatusInfo = "Port selected.";
+						} catch (PortInUseException e) {
+							System.out.println( "Port in use.");
+							connectionStatusInfo = "Port in use.";
+							continue;
+						}
 
-						continue;
-					}
+						try {
+							outputStream = serialPort.getOutputStream();
+						} catch (IOException e) {
+						}
 
-					try {
-						outputStream = serialPort.getOutputStream();
-					} catch (IOException e) {
-					}
+						try {
+							serialPort.setSerialPortParams(baudRate, dataBits, stopBits, parity);
+						} catch (UnsupportedCommOperationException e) {
+						}
 
-					try {
-						serialPort.setSerialPortParams(9600,
-								SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
-								SerialPort.PARITY_NONE);
-					} catch (UnsupportedCommOperationException e) {
-					}
-
-					try {
-						serialPort.notifyOnOutputEmpty(true);
-					} catch (Exception e) {
-						System.out.println("Error setting event notification");
-						System.out.println(e.toString());
-						System.exit(-1);
+						try {
+							serialPort.notifyOnOutputEmpty(true);
+						} catch (Exception e) {
+							System.out.println("Error setting event notification");
+							System.out.println(e.toString());
+						}
 					}
 				}
 			}
+
+			if (!portFound) {
+				System.out.println("port " + this.portName + " not found.");
+				connectionStatusInfo = "port " + this.portName + " not found.";
+				connected = false;
+			}
+
+		} else {
+			System.out.println("no Port assigned to function.\n\r");
+			connectionStatusInfo = "no Port assigned to function.";
+			connected = false;
 		}
 
-		if (!portFound) {
-			System.out.println("port " + defaultPort + " not found.");
-		}
+		return connected;
 	}
 
 	public void close() {
@@ -145,14 +199,15 @@ public class ComPortSelection extends SelectionAdapter {
 			Thread.sleep(2000); // Be sure data is xferred before closing
 		} catch (Exception e) {
 		}
+
 		serialPort.close();
-		System.exit(1);
+		System.out.println("Closed Port " + this.portName);
+		// System.exit(1);
 	}
 
-	public static void write(String messageString) {
+	public void write(String messageString) {
 
-		System.out.println("Writing \"" + messageString + "\" to "
-				+ serialPort.getName());
+		System.out.println("Writing \"" + messageString + "\" to " + serialPort.getName());
 
 		try {
 			outputStream.write(messageString.getBytes());
@@ -160,7 +215,7 @@ public class ComPortSelection extends SelectionAdapter {
 		}
 	}
 
-	public static void write(List<String> messageList) {
+	public void write(List<String> messageList) {
 		for (String s : messageList) {
 			write(s);
 		}

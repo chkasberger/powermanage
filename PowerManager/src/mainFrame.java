@@ -34,9 +34,10 @@ public class mainFrame {
 
 	private static Logger logger = Logger.getRootLogger();
 	ComPortSelection comPortSelection = new ComPortSelection();
-	
+
 	protected Shell shell;
 	private Text text;
+
 	/**
 	 * Launch the application.
 	 * 
@@ -52,7 +53,6 @@ public class mainFrame {
 			e.printStackTrace();
 		}
 	}
-
 
 	private static void createLogger(Level logLevel) {
 		try {
@@ -88,7 +88,9 @@ public class mainFrame {
 				display.sleep();
 			}
 		}
-		comPortSelection.close();
+		
+		if (comPortSelection.isConnected())
+			comPortSelection.close();
 	}
 
 	/**
@@ -101,14 +103,12 @@ public class mainFrame {
 		shell.setText("SWT Application");
 
 		ArrayList<String> availableComPorts = new ArrayList<String>(
-				ComPortSelection.listPorts());
+				comPortSelection.listPorts());
 
-		Combo comboPortList = new Combo(shell, SWT.NONE);
+		final Combo comboPortList = new Combo(shell, SWT.NONE);
 		comboPortList.addSelectionListener(new SelectionAdapter() {
-			
-			//String[] str = {"COM5"};
 			public void widgetSelected(SelectionEvent e) {
-				comPortSelection.open("");
+				comPortSelection.open(comboPortList.getText());
 				setupConnection();
 			}
 		});
@@ -127,6 +127,12 @@ public class mainFrame {
 		 * Create button.
 		 */
 		Button btnNewButton = new Button(shell, SWT.NONE);
+		btnNewButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				comPortSelection.write("test");
+			}
+		});
 		btnNewButton.setBounds(349, 8, 75, 25);
 		btnNewButton.setText("New Button");
 
@@ -197,8 +203,7 @@ public class mainFrame {
 
 		MenuItem menuItemOnePointFive = new MenuItem(menu_SB, SWT.RADIO);
 		menuItemOnePointFive.setText("1,5");
-		menuItemOnePointFive
-				.addSelectionListener(comPortSelection);
+		menuItemOnePointFive.addSelectionListener(comPortSelection);
 
 		MenuItem menuItemTwo = new MenuItem(menu_SB, SWT.RADIO);
 		menuItemTwo.setText("2");
@@ -225,19 +230,15 @@ public class mainFrame {
 		// TODO Auto-generated method stub
 		// menu_BR.
 	}
-	
-/*	public static class ComPortRadioMenuItemListener extends SelectionAdapter {
-		//SCom
 
-		int x = 0;
-		public void widgetSelected(SelectionEvent event) {
-			MenuItem item = (MenuItem) event.widget;
-			if (item.getSelection()) {
-				
-				System.out.print(item.getText() + " selected.\n\rThis is the " + x + " instance");
-				x++;
-			}
-		}
-	}
-	*/
+	/*
+	 * public static class ComPortRadioMenuItemListener extends SelectionAdapter
+	 * { //SCom
+	 * 
+	 * int x = 0; public void widgetSelected(SelectionEvent event) { MenuItem
+	 * item = (MenuItem) event.widget; if (item.getSelection()) {
+	 * 
+	 * System.out.print(item.getText() + " selected.\n\rThis is the " + x +
+	 * " instance"); x++; } } }
+	 */
 }
