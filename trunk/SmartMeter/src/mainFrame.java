@@ -68,23 +68,25 @@ public class mainFrame {
 		mnConfig.add(menu);
 		
 		/*
-		 * 
+		 * baud rate settings
 		 */
 		JMenu mnBaudRate = new JMenu("Baud Rate");
 		menu.add(mnBaudRate);
 		
 		JRadioButtonMenuItem menuItemBR19200 = new JRadioButtonMenuItem("19200", true);
+		menuItemBR19200.setName("BaudRate");
 		menuItemBR19200.addItemListener(buttonChangeListener);
 		buttonGroupBaudRate.add(menuItemBR19200);
 		mnBaudRate.add(menuItemBR19200);
 		
 		JRadioButtonMenuItem menuItemBR9600 = new JRadioButtonMenuItem("9600");
+		menuItemBR9600.setName("BaudRate");
 		menuItemBR9600.addItemListener(buttonChangeListener);
 		buttonGroupBaudRate.add(menuItemBR9600);
 		mnBaudRate.add(menuItemBR9600);
 
 		/*
-		 * Parity config
+		 * Parity settings
 		 */
 		JMenu mnParity = new JMenu("Parity");
 		menu.add(mnParity);
@@ -108,7 +110,7 @@ public class mainFrame {
 		mnParity.add(menuItemPT0);
 
 		/*
-		 * 
+		 * stop bits settings
 		 */
 		JMenu mnStopBits = new JMenu("Stop Bits");
 		menu.add(mnStopBits);
@@ -136,18 +138,21 @@ public class mainFrame {
 		menuItemST0.addItemListener(buttonChangeListener);
 		buttonGroupStopBits.add(menuItemST0);
 		mnStopBits.add(menuItemST0);
+		
 		/*
-		 * 
+		 * data bits settings 
 		 */
 		JMenu mnDataBits = new JMenu("Data Bits");
 		menu.add(mnDataBits);
 		
 		JRadioButtonMenuItem menuItemDB8 = new JRadioButtonMenuItem("8", true);
+		menuItemDB8.setName("DataBits");
 		menuItemDB8.addItemListener(buttonChangeListener);
 		buttonGroupDataBits.add(menuItemDB8);
 		mnDataBits.add(menuItemDB8);
 		
 		JRadioButtonMenuItem menuItemDB7 = new JRadioButtonMenuItem("7");
+		menuItemDB7.setName("DataBits");
 		menuItemDB7.addItemListener(buttonChangeListener);
 		buttonGroupDataBits.add(menuItemDB7);
 		mnDataBits.add(menuItemDB7);
