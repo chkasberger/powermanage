@@ -76,32 +76,34 @@ public class mainFrame {
 		JRadioButtonMenuItem menuItemBR19200 = new JRadioButtonMenuItem("19200", true);
 		menuItemBR19200.addItemListener(buttonChangeListener);
 		buttonGroupBaudRate.add(menuItemBR19200);
-		//radioButtonMenuItem.setSelected(true);
 		mnBaudRate.add(menuItemBR19200);
 		
 		JRadioButtonMenuItem menuItemBR9600 = new JRadioButtonMenuItem("9600");
 		menuItemBR9600.addItemListener(buttonChangeListener);
 		buttonGroupBaudRate.add(menuItemBR9600);
 		mnBaudRate.add(menuItemBR9600);
-		
+
 		/*
-		 * 
+		 * Parity config
 		 */
 		JMenu mnParity = new JMenu("Parity");
 		menu.add(mnParity);
 
 		JRadioButtonMenuItem menuItemPT2 = new JRadioButtonMenuItem("EVEN");
+		menuItemPT2.setName("Parity");		
 		menuItemPT2.addItemListener(buttonChangeListener);
 		buttonGroupParity.add(menuItemPT2);
 		mnParity.add(menuItemPT2);
 						
 		JRadioButtonMenuItem menuItemPT1 = new JRadioButtonMenuItem("ODD");
 		menuItemPT1.addItemListener(buttonChangeListener);
+		menuItemPT1.setName("Parity");
 		buttonGroupParity.add(menuItemPT1);
 		mnParity.add(menuItemPT1);
 
 		JRadioButtonMenuItem menuItemPT0 = new JRadioButtonMenuItem("NONE", true);
 		menuItemPT0.addItemListener(buttonChangeListener);
+		menuItemPT0.setName("Parity");
 		buttonGroupParity.add(menuItemPT0);
 		mnParity.add(menuItemPT0);
 
@@ -112,25 +114,27 @@ public class mainFrame {
 		menu.add(mnStopBits);
 		
 		JRadioButtonMenuItem menuItemST2 = new JRadioButtonMenuItem("2");
+		menuItemST2.setName("StopBits");
 		menuItemST2.addItemListener(buttonChangeListener);
 		buttonGroupStopBits.add(menuItemST2);
 		mnStopBits.add(menuItemST2);
 		
 		JRadioButtonMenuItem menuItemST15 = new JRadioButtonMenuItem("1.5");
+		menuItemST15.setName("StopBits");
 		menuItemST15.addItemListener(buttonChangeListener);
 		buttonGroupStopBits.add(menuItemST15);
-		//radioButtonMenuItem.setSelected(true);
 		mnStopBits.add(menuItemST15);
 		
 		JRadioButtonMenuItem menuItemST1 = new JRadioButtonMenuItem("1", true);
+		menuItemST2.setName("StopBits");
 		menuItemST1.addItemListener(buttonChangeListener);
 		buttonGroupStopBits.add(menuItemST1);
 		mnStopBits.add(menuItemST1);
 		
 		JRadioButtonMenuItem menuItemST0 = new JRadioButtonMenuItem("0");
+		menuItemST2.setName("StopBits");
 		menuItemST0.addItemListener(buttonChangeListener);
 		buttonGroupStopBits.add(menuItemST0);
-		//radioButtonMenuItem.setSelected(true);
 		mnStopBits.add(menuItemST0);
 		/*
 		 * 
@@ -141,7 +145,6 @@ public class mainFrame {
 		JRadioButtonMenuItem menuItemDB8 = new JRadioButtonMenuItem("8", true);
 		menuItemDB8.addItemListener(buttonChangeListener);
 		buttonGroupDataBits.add(menuItemDB8);
-		//radioButtonMenuItem.setSelected(true);
 		mnDataBits.add(menuItemDB8);
 		
 		JRadioButtonMenuItem menuItemDB7 = new JRadioButtonMenuItem("7");
@@ -158,14 +161,8 @@ public class mainFrame {
 			JRadioButtonMenuItem item = (JRadioButtonMenuItem) arg0.getSource();//
 			if(item.isSelected()){
 				
+				System.out.print(item.getName() + "\n\r");
 				System.out.print(item.getText() + "\n\r");
-				
-				System.out.print(buttonGroupBaudRate.getElements() + "\r" +
-				buttonGroupParity.getElements() + "\r" +
-				buttonGroupStopBits.getElements() + "\r" +
-				buttonGroupDataBits.getElements() 
-				);
-				
 				
 			}
 
