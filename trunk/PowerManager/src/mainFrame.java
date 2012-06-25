@@ -89,7 +89,7 @@ public class mainFrame {
 			}
 		}
 		
-		if (comPortSelection.isConnected())
+		//if (comPortSelection.isConnected())
 			comPortSelection.close();
 	}
 
@@ -106,14 +106,13 @@ public class mainFrame {
 				comPortSelection.listPorts());
 
 		final Combo comboPortList = new Combo(shell, SWT.NONE);
+		comboPortList.setBounds(10, 10, 91, 23);
 		comboPortList.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				comPortSelection.open(comboPortList.getText());
-				setupConnection();
+				//setupConnection();
 			}
 		});
-
-		comboPortList.setBounds(10, 10, 91, 23);
 
 		for (String s : availableComPorts) {
 			// text.append(s + "\n\r");
@@ -127,12 +126,14 @@ public class mainFrame {
 		 * Create button.
 		 */
 		Button btnNewButton = new Button(shell, SWT.NONE);
-		btnNewButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+		btnNewButton.addListener(SWT.Selection, new Listener() {
+			
+			public void handleEvent(Event arg0) {
+				// TODO Auto-generated method stub
 				comPortSelection.write("test");
 			}
 		});
+		//comPortSelection.write("test");
 		btnNewButton.setBounds(349, 8, 75, 25);
 		btnNewButton.setText("New Button");
 
@@ -140,6 +141,13 @@ public class mainFrame {
 		 * Create menu.
 		 */
 
+		createMenu();
+		
+
+	}
+
+	private void createMenu() {
+		// TODO Auto-generated method stub
 		Menu menuBar = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menuBar);
 
@@ -223,7 +231,6 @@ public class mainFrame {
 		MenuItem menuItemSeven = new MenuItem(menu_DB, SWT.RADIO);
 		menuItemSeven.setText("7");
 		menuItemSeven.addSelectionListener(comPortSelection);
-
 	}
 
 	protected void setupConnection() {
@@ -231,14 +238,4 @@ public class mainFrame {
 		// menu_BR.
 	}
 
-	/*
-	 * public static class ComPortRadioMenuItemListener extends SelectionAdapter
-	 * { //SCom
-	 * 
-	 * int x = 0; public void widgetSelected(SelectionEvent event) { MenuItem
-	 * item = (MenuItem) event.widget; if (item.getSelection()) {
-	 * 
-	 * System.out.print(item.getText() + " selected.\n\rThis is the " + x +
-	 * " instance"); x++; } } }
-	 */
 }

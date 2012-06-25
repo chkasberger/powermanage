@@ -19,13 +19,13 @@ public class ComPortSelection extends SelectionAdapter {
 	SerialPort serialPort;
 	OutputStream outputStream;
 	boolean outputBufferEmptyFlag = false;
-	boolean connected;
-	String connectionStatusInfo;
+	boolean connected = false;
+	String connectionStatusInfo = null;
 	String portName;
-	int baudRate;
-	int parity;
-	int stopBits;
-	int dataBits;
+	int baudRate = 19200;
+	int parity = 0;
+	int stopBits = 1;
+	int dataBits = 8;
 
 	public boolean isConnected() {
 		return this.connected;
@@ -41,7 +41,7 @@ public class ComPortSelection extends SelectionAdapter {
 
 	public void setPortName(String portName) {
 		this.portName = portName;
-
+		changeConfig();
 	}
 
 	public int getBaudRate() {
@@ -60,6 +60,7 @@ public class ComPortSelection extends SelectionAdapter {
 
 	public void setParity(int parity) {
 		this.parity = parity;
+		changeConfig();
 	}
 
 	public int getStopBits() {
@@ -68,6 +69,7 @@ public class ComPortSelection extends SelectionAdapter {
 
 	public void setStopBits(int stopBits) {
 		this.stopBits = stopBits;
+		changeConfig();
 	}
 
 	public int getDataBits() {
@@ -76,16 +78,21 @@ public class ComPortSelection extends SelectionAdapter {
 
 	public void setDataBits(int dataBits) {
 		this.dataBits = dataBits;
+		changeConfig();
 	}
 
-	int x = 0;
+
 
 	public void widgetSelected(SelectionEvent event) {
 		MenuItem item = (MenuItem) event.widget;
 		if (item.getSelection()) {
 
-			System.out.print(item.getText() + " selected.\n\rInstance called " + x + " times\n\r");
-			x++;
+			System.out.print(item.getText() + "\n\r");
+			System.out.print(item.getAccelerator() + "\n\r");
+			System.out.print(item.getMenu() + "\n\r");
+			System.out.print(item.getID() + "\n\r");
+			System.out.print(item.getParent() + "\n\r");
+			//System.out.print(item.setMenu(menu))
 			open("");
 		}
 	}
@@ -127,16 +134,17 @@ public class ComPortSelection extends SelectionAdapter {
 	private void changeConfig(){
 		open(this.portName);
 	}
+	
 	public boolean open(String portName) {
 		boolean portFound = false;
 		// String defaultPort = "/dev/term/a";
+		if (((this.portName != null) && (this.portName == portName))
+				|| ((this.portName != null) && (this.portName != portName))) {
+			serialPort.close();
+		}
 
 		if (portName.length() > 0) {
 			this.portName = portName;
-
-			
-			
-			
 			portList = CommPortIdentifier.getPortIdentifiers();
 
 			while (portList.hasMoreElements()) {
@@ -153,6 +161,7 @@ public class ComPortSelection extends SelectionAdapter {
 							serialPort = (SerialPort) portId.open("SimpleWrite", 2000);
 							System.out.println("Port selected.");
 							connectionStatusInfo = "Port selected.";
+							connected = true;
 						} catch (PortInUseException e) {
 							System.out.println( "Port in use.");
 							connectionStatusInfo = "Port in use.";
