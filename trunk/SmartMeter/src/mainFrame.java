@@ -77,7 +77,7 @@ public class mainFrame {
 			// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
 
 		} catch (Exception ex) {
-			System.out.println(ex);
+			logger.debug(ex);
 		}
 		logger.debug("Meine Debug-Meldung");
 		logger.info("Meine Info-Meldung");
