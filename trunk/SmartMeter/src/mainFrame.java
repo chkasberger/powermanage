@@ -1,6 +1,10 @@
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JFrame;
@@ -9,11 +13,17 @@ import javax.swing.JMenuBar;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.apache.log4j.*;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.RowSpec;
+import com.jgoodies.forms.factories.FormFactory;
+import javax.swing.JComboBox;
+import javax.swing.JButton;
 
 public class mainFrame {
 
 	private static Logger logger = Logger.getRootLogger();
-	private Level logLevel = Level.DEBUG;
+	private Level logLevel = Level.OFF;
 	
 	private JFrame frame;
 	ComPort comPort = new ComPort();
@@ -96,9 +106,54 @@ public class mainFrame {
 		mnConfig.add(menu);
 		
 		createMenuPortConfig(menu);
-		
+		createComboBoxComPortSelection();
+		createButtons();
+
 	}
-	
+
+	private void createComboBoxComPortSelection() {
+		frame.getContentPane().setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
+		
+		final JComboBox<String> comboPortList = new JComboBox<String>();
+		frame.getContentPane().add(comboPortList, "2, 2, fill, default");
+		comboPortList.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				Object[] args = new Object[2];
+				args[0] = "PortName";
+				args[1] = comboPortList.getSelectedItem();//arg0.getSource();
+				
+				if(comPort.open(args)){
+					comboPortList.setBackground(Color.GREEN);		
+				}
+				else{
+					comboPortList.setBackground(Color.RED);
+				}
+			}
+		});
+		
+		comboPortList.addItem("");
+				
+		ArrayList<String> availableComPorts = new ArrayList<String>(
+				comPort.listPorts());
+		for (String s : availableComPorts) {
+			// text.append(s + "\n\r");
+			comboPortList.addItem(s);
+		}
+	}
+
 	private void createMenuPortConfig(JMenu menu) {
 		// TODO Auto-generated method stub
 		/*
@@ -201,7 +256,22 @@ public class mainFrame {
 		buttonGroupDataBits.add(menuItemDB7);
 		mnDataBits.add(menuItemDB7);
 	}
+	
+	private void createButtons() {
+		// TODO Auto-generated method stub
+		JButton btnNewButton = new JButton("New button");
+		frame.getContentPane().add(btnNewButton, "2, 4");
+		btnNewButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				comPort.writeln("hello world");
+				
+			}
+		});
 
+	}
 	
 	private ItemListener buttonChangeListenerPortConfig = new ItemListener() {
 		
@@ -214,12 +284,18 @@ public class mainFrame {
 				args[0]=item.getName();
 				args[1] = item.getText();
 				
+				logger.debug("Set " + item.getName() + " to " + item.getText());
 				comPort.open(args);
-				
-				System.out.print("Set " + item.getName() + " to " + item.getText() + "\r");
-				
 			}
 
 		}
 	};
+	
+	private String getMethodName(){
+		String functionName;
+		functionName = (new Exception().getStackTrace()[1].getClassName() + "."
+				+ new Exception().getStackTrace()[1].getMethodName());
+		return functionName;
+	}
+	
 }

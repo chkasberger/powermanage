@@ -1,5 +1,3 @@
-import java.io.IOException;
-
 import org.apache.log4j.*;
 
 public class PMLogger extends Logger {
