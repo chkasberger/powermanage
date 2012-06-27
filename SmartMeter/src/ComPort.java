@@ -5,7 +5,7 @@ import org.apache.log4j.*;
 
 public class ComPort {
 	private static Logger logger = Logger.getRootLogger();
-		
+
 	Enumeration<?> portList;
 	CommPortIdentifier portId;
 	String messageString = "Hello, world!";
@@ -14,16 +14,19 @@ public class ComPort {
 	boolean outputBufferEmptyFlag = false;
 	boolean connected = false;
 	String connectionStatusInfo = null;
-	String portName;
+	String portName = "";
 	int baudRate = 19200;
-	enum Parity{NONE,ODD,EVEN};
-		
+
+	public enum Parity {
+		NONE, ODD, EVEN
+	};
+
 	Parity parity = Parity.NONE;
 	int stopBits = 1;
 	int dataBits = 8;
 
 	public boolean isConnected() {
-		
+
 		return this.connected;
 	}
 
@@ -113,12 +116,21 @@ public class ComPort {
 	public boolean open(String portName) {
 		boolean portFound = false;
 		// String defaultPort = "/dev/term/a";
-		if (((this.portName != null) && (this.portName == portName))
+		/*if (((this.portName != null) && (this.portName == portName))
 				|| ((this.portName != null) && (this.portName != portName))) {
 			serialPort.close();
 		}
+		*/
+		logger.debug(portName + " is passed to " + getMethodName(1));		
 
+		if(isConnected())
+			serialPort.close();
+			connected = false;
+			
 		if (portName.length() > 0) {
+			
+			//serialPort.close();
+
 			this.portName = portName;
 			portList = CommPortIdentifier.getPortIdentifiers();
 
@@ -133,7 +145,11 @@ public class ComPort {
 						portFound = true;
 
 						try {
-							serialPort = (SerialPort) portId.open("SimpleWrite", 2000);
+							serialPort = (SerialPort) portId.open(portName, baudRate);
+							logger.debug("SP isDTR = " + serialPort.isDTR());
+							logger.debug("SP isCD = " + serialPort.isCD());
+							logger.debug("SP isRTS = " + serialPort.isRTS());
+							
 							System.out.println("Port selected.");
 							connectionStatusInfo = "Port selected.";
 							connected = true;
@@ -149,7 +165,22 @@ public class ComPort {
 						}
 
 						try {
-							serialPort.setSerialPortParams(baudRate, dataBits, stopBits, 1);							
+							int localParity = 0;
+							switch (parity.toString())
+								{
+								case "NONE":
+									localParity = 0;
+									break;
+								case "ODD":
+									localParity = 1;
+									break;
+								case "EVEN":
+									localParity = 2;
+								default:
+									localParity = 0;
+									break;
+								}
+							serialPort.setSerialPortParams(baudRate, dataBits, stopBits, localParity);
 						} catch (UnsupportedCommOperationException e) {
 						}
 
@@ -182,39 +213,29 @@ public class ComPort {
 		switch ((String) args[0])
 			{
 			case "PortName":
-				this.portName = (String) args[1];
-				logger.debug("New " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
+				this.portName = args[1]. toString();
+				logger.debug(args[0] + " " + args[1] + " passed to " + getMethodName(1));
 				break;
 			case "BaudRate":
 				this.baudRate = Integer.parseInt(args[1].toString());
-				logger.debug("New " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
+				logger.debug(args[0] + " " + args[1] + " passed to " + getMethodName(1));
 				break;
 			case "Parity":
-				this.baudRate = Integer.parseInt(args[1].toString());
-				logger.debug("New " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
+				this.parity = Parity.valueOf(args[1].toString());
+				logger.debug(args[0] + " " + args[1] + " passed to " + getMethodName(1));
 				break;
 			case "StopBits":
 				this.stopBits = Integer.parseInt(args[1].toString());
-				logger.debug("New " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
+				logger.debug(args[0] + " " + args[1] + " passed to " + getMethodName(1));
 				break;
 			case "DataBits":
-				this.dataBits = Integer.parseInt(args[1].toString());
-				logger.debug("New " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
+				logger.debug(args[0] + " " + args[1] + " passed to " + getMethodName(1));
 				break;
 			default:
-				logger.debug("Unknown name " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
-				
-				System.out.println("Unknown name " + args[0] + " with value " + args[1] + " passed to method "
-						+ new Exception().getStackTrace()[0].getMethodName());
+				logger.debug(args[0] + " " + args[1] + " passed to " + getMethodName(1));
 				break;
 			}
-		return true;
+		return open(this.portName);
 	}
 
 	public void close() {
@@ -238,9 +259,20 @@ public class ComPort {
 		}
 	}
 
+	public void writeln(String messageString) {
+		write(messageString + "\n\r"); 	
+	}
+	
 	public void write(List<String> messageList) {
 		for (String s : messageList) {
 			write(s);
 		}
+	}
+	
+	private String getMethodName(int stack){
+		String functionName;
+		functionName = (new Exception().getStackTrace()[stack].getClassName() + "."
+				+ new Exception().getStackTrace()[stack].getMethodName());
+		return functionName;
 	}
 }
