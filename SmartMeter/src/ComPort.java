@@ -85,7 +85,7 @@ public class ComPort {
 		}
 
 		for (String s : portList) {
-			System.out.println(s);
+			logger.debug(s);
 		}
 
 		return portList;
@@ -140,7 +140,7 @@ public class ComPort {
 				if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
 
 					if (portId.getName().equals(this.portName)) {
-						System.out.println("Found port " + this.portName);
+						logger.debug("Found port " + this.portName);
 
 						portFound = true;
 
@@ -150,11 +150,11 @@ public class ComPort {
 							logger.debug("SP isCD = " + serialPort.isCD());
 							logger.debug("SP isRTS = " + serialPort.isRTS());
 							
-							System.out.println("Port selected.");
+							logger.debug("Port selected.");
 							connectionStatusInfo = "Port selected.";
 							connected = true;
 						} catch (PortInUseException e) {
-							System.out.println("Port in use.");
+							logger.debug("Port in use.");
 							connectionStatusInfo = "Port in use.";
 							continue;
 						}
@@ -187,21 +187,21 @@ public class ComPort {
 						try {
 							serialPort.notifyOnOutputEmpty(true);
 						} catch (Exception e) {
-							System.out.println("Error setting event notification");
-							System.out.println(e.toString());
+							logger.debug("Error setting event notification");
+							logger.debug(e.toString());
 						}
 					}
 				}
 			}
 
 			if (!portFound) {
-				System.out.println("port " + this.portName + " not found.");
+				logger.debug("port " + this.portName + " not found.");
 				connectionStatusInfo = "port " + this.portName + " not found.";
 				connected = false;
 			}
 
 		} else {
-			System.out.println("no Port assigned to function.\n\r");
+			logger.debug("no Port assigned to function.\n\r");
 			connectionStatusInfo = "no Port assigned to function.";
 			connected = false;
 		}
@@ -245,13 +245,13 @@ public class ComPort {
 		}
 
 		serialPort.close();
-		System.out.println("Closed Port " + this.portName);
+		logger.debug("Closed Port " + this.portName);
 		// System.exit(1);
 	}
 
 	public void write(String messageString) {
 
-		System.out.println("Writing \"" + messageString + "\" to " + serialPort.getName());
+		logger.debug("Writing \"" + messageString + "\" to " + serialPort.getName());
 
 		try {
 			outputStream.write(messageString.getBytes());
