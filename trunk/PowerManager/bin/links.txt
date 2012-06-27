@@ -1,0 +1,3 @@
+http://logging.apache.org/log4j/1.2/apidocs/index.html
+http://www.torsten-horn.de/techdocs/java-log4j.htm#Simple-Logging
+http://www.programmersbase.net/Content/Java/Content/Tutorial/Java/Class.htm
