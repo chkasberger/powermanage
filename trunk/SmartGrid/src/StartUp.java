@@ -54,7 +54,7 @@ public class StartUp {
 		*/
 		//ComPortShell cPort = new ComPortShell();
 		ComPort cPort = new ComPort();
-		
+		cPort.changeConfig();
 		
 	}
 

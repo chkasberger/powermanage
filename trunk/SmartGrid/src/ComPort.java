@@ -122,8 +122,10 @@ public class ComPort {
 			}
 	}
 
-	private void changeConfig(String name, float value) {
-		open(this.portName);
+	public void changeConfig() {
+		//ComPortShell comPortShell = new ComPortShell(listPorts());
+		//comPortShell.open();
+
 	}
 
 	public boolean open(String portName) {
@@ -293,6 +295,31 @@ public class ComPort {
 
 		protected Shell shlPortConfig;
 
+		public ComPortShell(){
+			
+		}
+		
+		public ComPortShell(ArrayList<String> availableComPorts){
+			//ArrayList<String> availableComPorts = list;
+
+			final Combo comboPortList = new Combo(shlPortConfig, SWT.NONE);
+			comboPortList.setBounds(10, 10, 91, 23);
+			
+			/*
+			comboPortList.addSelectionListener(new SelectionAdapter() {
+			 
+				public void widgetSelected(SelectionEvent e) {
+					comPortSelection.open(comboPortList.getText());
+					//setupConnection();
+				}
+			});
+			*/
+
+			for (String s : availableComPorts) {
+				// text.append(s + "\n\r");
+				comboPortList.add(s);
+			}
+		}
 		/**
 		 * Open the window.
 		 * @wbp.parser.entryPoint
@@ -314,6 +341,8 @@ public class ComPort {
 		 */
 		protected void createContents() {
 
+
+			
 			shlPortConfig = new Shell();
 			shlPortConfig.setMinimumSize(new Point(100, 30));
 			shlPortConfig.setSize(378, 165);
