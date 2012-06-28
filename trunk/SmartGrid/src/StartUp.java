@@ -1,3 +1,7 @@
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.SimpleLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -13,6 +17,8 @@ import org.eclipse.swt.graphics.Point;
 public class StartUp {
 
 	protected Shell shell;
+	private static Logger logger = Logger.getRootLogger();
+	static Level logLevel = Level.DEBUG;
 
 	/**
 	 * Launch the application.
@@ -20,12 +26,33 @@ public class StartUp {
 	 */
 	public static void main(String[] args) {
 		try {
+			configureLogger();
 			StartUp window = new StartUp();
 			window.open();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	private static void configureLogger() {
+        try {
+                SimpleLayout layout = new SimpleLayout();
+                ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+                logger.setLevel(logLevel);
+                logger.addAppender(consoleAppender);
+                // FileAppender fileAppender = new FileAppender( layout, "logs/"+
+                // logLevel +".log", false );
+                // logger.addAppender( fileAppender );
+                // ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
+
+        } catch (Exception ex) {
+                logger.debug(ex);
+        }
+        logger.debug("Meine Debug-Meldung");
+        logger.info("Meine Info-Meldung");
+        logger.warn("Meine Warn-Meldung");
+        logger.error("Meine Error-Meldung");
+        logger.fatal("Meine Fatal-Meldung");
+}
 
 	/**
 	 * Open the window.
@@ -43,19 +70,8 @@ public class StartUp {
 	}
 
 	private void createPopUps() {
-		// TODO Auto-generated method stub
-		/*Display display = Display.getDefault();
-		PopUpForm pConf = new PopUpForm(display);
-		pConf.open();
-		
-		DialogWindow myDialog = new DialogWindow(shell, 0);
-		myDialog.open();
-		myDialog.setText("fooBar");
-		*/
-		//ComPortShell cPort = new ComPortShell();
-		ComPort cPort = new ComPort();
-		cPort.changeConfig();
-		
+		ComPortShell cShell = new ComPortShell();
+		cShell.open();
 	}
 
 	/**

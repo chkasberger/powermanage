@@ -46,6 +46,7 @@ public class ComPort {
 		return this.connectionStatusInfo;
 	}
 
+
 	public String getPortName() {
 		return this.portName;
 	}
@@ -86,7 +87,12 @@ public class ComPort {
 		this.dataBits = dataBits;
 	}
 	
-
+	/**
+	 * @wbp.parser.entryPoint
+	 */
+public ComPort() {
+	changeConfig();
+}
 	public ArrayList<String> listPorts() {
 		ArrayList<String> portList = new ArrayList<String>();
 		@SuppressWarnings("unchecked")
@@ -98,7 +104,7 @@ public class ComPort {
 		}
 
 		for (String s : portList) {
-			logger.debug(s);
+			//logger.debug(s);
 		}
 
 		return portList;
@@ -122,9 +128,13 @@ public class ComPort {
 			}
 	}
 
+
 	public void changeConfig() {
-		//ComPortShell comPortShell = new ComPortShell(listPorts());
-		//comPortShell.open();
+		ArrayList<String> portList = new ArrayList<String>();
+		portList = listPorts();
+		ComPortShell comPortShell = new ComPortShell();
+		//comPortShell.setPortList
+		comPortShell.open(portList);
 
 	}
 
@@ -291,35 +301,11 @@ public class ComPort {
 		return functionName;
 	}
 	
-	public class ComPortShell {
+	class ComPortShell {
 
 		protected Shell shlPortConfig;
+		ArrayList<String> availableComPorts;
 
-		public ComPortShell(){
-			
-		}
-		
-		public ComPortShell(ArrayList<String> availableComPorts){
-			//ArrayList<String> availableComPorts = list;
-
-			final Combo comboPortList = new Combo(shlPortConfig, SWT.NONE);
-			comboPortList.setBounds(10, 10, 91, 23);
-			
-			/*
-			comboPortList.addSelectionListener(new SelectionAdapter() {
-			 
-				public void widgetSelected(SelectionEvent e) {
-					comPortSelection.open(comboPortList.getText());
-					//setupConnection();
-				}
-			});
-			*/
-
-			for (String s : availableComPorts) {
-				// text.append(s + "\n\r");
-				comboPortList.add(s);
-			}
-		}
 		/**
 		 * Open the window.
 		 * @wbp.parser.entryPoint
@@ -327,6 +313,7 @@ public class ComPort {
 		public void open() {
 			Display display = Display.getDefault();
 			createContents();		
+			
 			shlPortConfig.open();
 			shlPortConfig.layout();
 			while (!shlPortConfig.isDisposed()) {
@@ -336,19 +323,41 @@ public class ComPort {
 			}
 		}
 
+		public void open(ArrayList<String> availableComPorts){
+			if(availableComPorts != null){
+				this.availableComPorts = availableComPorts;
+				open();
+				logger.debug(getMethodName(1) + " port list is passed");
+			}else{
+				logger.debug(getMethodName(1) + " port list is null");
+			}
+		}
 		/**
 		 * Create contents of the window.
 		 */
 		protected void createContents() {
-
-
-			
 			shlPortConfig = new Shell();
 			shlPortConfig.setMinimumSize(new Point(100, 30));
 			shlPortConfig.setSize(378, 165);
 			shlPortConfig.setText("Port Config");
 			shlPortConfig.setLayout(new FormLayout());
 			
+			createRadioButtonGroups(shlPortConfig);
+			createComboPortList(shlPortConfig);
+
+		}
+		private void createComboPortList(Shell shlPortConfig2) {
+			Combo combo = new Combo(shlPortConfig, SWT.NONE);
+			FormData fd_combo = new FormData();
+			fd_combo.top = new FormAttachment(0, 10);
+			fd_combo.left = new FormAttachment(0, 10);
+			combo.setLayoutData(fd_combo);
+			for(String s : this.availableComPorts){
+				combo.add(s);
+			}
+		}
+		private void createRadioButtonGroups(Shell shlPortConfig2) {
+
 			Group grpBaudRate = new Group(shlPortConfig, SWT.NONE);
 			FormData fd_grpBaudRate = new FormData();
 			fd_grpBaudRate.bottom = new FormAttachment(0, 119);
@@ -359,10 +368,13 @@ public class ComPort {
 			Button rbBaud_19200 = new Button(grpBaudRate, SWT.RADIO);
 			rbBaud_19200.setBounds(10, 20, 60, 16);
 			rbBaud_19200.setText("19200");
+			rbBaud_19200.setData(19200);
+			rbBaud_19200.setSelection(true);
 			
 			Button rbBaud_9600 = new Button(grpBaudRate, SWT.RADIO);
 			rbBaud_9600.setBounds(10, 40, 60, 16);
 			rbBaud_9600.setText("9600");
+			rbBaud_9600.setData(9600);
 			
 			Group grpParity = new Group(shlPortConfig, SWT.NONE);
 			FormData fd_grpParity = new FormData();
@@ -376,14 +388,18 @@ public class ComPort {
 			Button rbParity_NONE = new Button(grpParity, SWT.RADIO);
 			rbParity_NONE.setBounds(10, 20, 60, 16);
 			rbParity_NONE.setText("NONE");
+			rbParity_NONE.setData(0);
+			rbParity_NONE.setSelection(true);
 			
 			Button rbParity_ODD = new Button(grpParity, SWT.RADIO);
 			rbParity_ODD.setBounds(10, 40, 60, 16);
 			rbParity_ODD.setText("ODD");
+			rbParity_ODD.setData(1);
 			
 			Button rbParity_EVEN = new Button(grpParity, SWT.RADIO);
 			rbParity_EVEN.setBounds(10, 60, 60, 16);
 			rbParity_EVEN.setText("EVEN");
+			rbParity_EVEN.setData(2);
 			
 			Group grpStopBits = new Group(shlPortConfig, SWT.NONE);
 			FormData fd_grpStopBits = new FormData();
@@ -397,10 +413,13 @@ public class ComPort {
 			Button rbStop_ONE = new Button(grpStopBits, SWT.RADIO);
 			rbStop_ONE.setBounds(10, 20, 60, 16);
 			rbStop_ONE.setText("ONE");
+			rbStop_ONE.setData(1);
+			rbStop_ONE.setSelection(true);
 			
 			Button rbStop_TWO = new Button(grpStopBits, SWT.RADIO);
 			rbStop_TWO.setText("TWO");
 			rbStop_TWO.setBounds(10, 40, 60, 16);
+			rbStop_TWO.setData(2);
 			
 			Group grpDataBits = new Group(shlPortConfig, SWT.NONE);
 			FormData fd_grpDataBits = new FormData();
@@ -411,27 +430,16 @@ public class ComPort {
 			grpDataBits.setLayoutData(fd_grpDataBits);
 			grpDataBits.setText("Data Bits");
 			
-			Button button_2 = new Button(grpDataBits, SWT.RADIO);
-			button_2.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-				}
-			});
-			button_2.setText("8");
-			button_2.setBounds(10, 22, 60, 16);
+			Button rbDataBits_8 = new Button(grpDataBits, SWT.RADIO);
+			rbDataBits_8.setText("8");
+			rbDataBits_8.setBounds(10, 22, 60, 16);
+			rbDataBits_8.setData(8);
+			rbDataBits_8.setSelection(true);
 			
-			Button button_3 = new Button(grpDataBits, SWT.RADIO);
-			button_3.setText("7");
-			button_3.setBounds(10, 44, 60, 16);
-			
-			Combo combo = new Combo(shlPortConfig, SWT.NONE);
-			fd_grpBaudRate.top = new FormAttachment(combo, 6);
-			fd_grpBaudRate.left = new FormAttachment(combo, 0, SWT.LEFT);
-			FormData fd_combo = new FormData();
-			fd_combo.top = new FormAttachment(0, 10);
-			fd_combo.left = new FormAttachment(0, 10);
-			combo.setLayoutData(fd_combo);
-
+			Button rbDataBits_7 = new Button(grpDataBits, SWT.RADIO);
+			rbDataBits_7.setText("7");
+			rbDataBits_7.setBounds(10, 44, 60, 16);
+			rbDataBits_7.setData(7);
 		}
 	}
 }
