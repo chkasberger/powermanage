@@ -35,12 +35,7 @@ public class ComPort {
 	String connectionStatusInfo = null;
 	String portName = "";
 	int baudRate = 19200;
-
-	public enum Parity {
-		NONE, ODD, EVEN
-	};
-
-	Parity parity = Parity.NONE;
+	int parity = 0;
 	int stopBits = 1;
 	int dataBits = 8;
 
@@ -69,11 +64,11 @@ public class ComPort {
 		this.baudRate = baudRate;
 	}
 
-	public Parity getParity() {
+	public int getParity() {
 		return this.parity;
 	}
 
-	public void setParity(Parity parity) {
+	public void setParity(int parity) {
 		this.parity = parity;
 	}
 
@@ -160,7 +155,7 @@ public class ComPort {
 
 		Button rbBaud_19200 = new Button(grpBaudRate, SWT.RADIO);
 		rbBaud_19200.addSelectionListener(changeConfigAdapter);
-		
+
 		rbBaud_19200.setBounds(10, 20, 60, 16);
 		rbBaud_19200.setText("19200");
 		rbBaud_19200.setData(19200);
@@ -171,7 +166,7 @@ public class ComPort {
 		rbBaud_9600.setText("9600");
 		rbBaud_9600.setData(9600);
 		rbBaud_9600.addSelectionListener(changeConfigAdapter);
-		
+
 		Group grpParity = new Group(shlPortConfig, SWT.SHADOW_IN);
 		FormData fd_grpParity = new FormData();
 		fd_grpParity.top = new FormAttachment(grpBaudRate, 0, SWT.TOP);
@@ -187,19 +182,19 @@ public class ComPort {
 		rbParity_NONE.setData(0);
 		rbParity_NONE.setSelection(true);
 		rbParity_NONE.addSelectionListener(changeConfigAdapter);
-		
+
 		Button rbParity_ODD = new Button(grpParity, SWT.RADIO);
 		rbParity_ODD.setBounds(10, 40, 60, 16);
 		rbParity_ODD.setText("ODD");
 		rbParity_ODD.setData(1);
 		rbParity_ODD.addSelectionListener(changeConfigAdapter);
-		
+
 		Button rbParity_EVEN = new Button(grpParity, SWT.RADIO);
 		rbParity_EVEN.setBounds(10, 60, 60, 16);
 		rbParity_EVEN.setText("EVEN");
 		rbParity_EVEN.setData(2);
 		rbParity_EVEN.addSelectionListener(changeConfigAdapter);
-		
+
 		Group grpStopBits = new Group(shlPortConfig, SWT.NONE);
 		FormData fd_grpStopBits = new FormData();
 		fd_grpStopBits.left = new FormAttachment(grpParity, 6);
@@ -214,13 +209,13 @@ public class ComPort {
 		rbStop_ONE.setData(1);
 		rbStop_ONE.setSelection(true);
 		rbStop_ONE.addSelectionListener(changeConfigAdapter);
-		
+
 		Button rbStop_TWO = new Button(grpStopBits, SWT.RADIO);
 		rbStop_TWO.setText("TWO");
 		rbStop_TWO.setBounds(10, 40, 60, 16);
 		rbStop_TWO.setData(2);
 		rbStop_TWO.addSelectionListener(changeConfigAdapter);
-		
+
 		Group grpDataBits = new Group(shlPortConfig, SWT.NONE);
 		fd_grpStopBits.right = new FormAttachment(grpDataBits, -6);
 		FormData fd_grpDataBits = new FormData();
@@ -237,29 +232,29 @@ public class ComPort {
 		rbDataBits_8.setData(8);
 		rbDataBits_8.setSelection(true);
 		rbDataBits_8.addSelectionListener(changeConfigAdapter);
-		
+
 		Button rbDataBits_7 = new Button(grpDataBits, SWT.RADIO);
 		rbDataBits_7.setText("7");
 		rbDataBits_7.setBounds(10, 44, 60, 16);
 		rbDataBits_7.setData(7);
 		rbDataBits_7.addSelectionListener(changeConfigAdapter);
 	}
-	
+
 	SelectionAdapter changeConfigAdapter = new SelectionAdapter() {
 		public void widgetSelected(SelectionEvent arg0) {
-			//public void itemStateChanged(ItemEvent arg0) {
-				Object[] args = new Object[2];
-				Button item = (Button) arg0.getSource();
-				
-				if(item.getSelection()){
-					args[0]=item.getText();
-					args[1] = item.getData();
-					
-					logger.debug("Set " + item.getParent() + " to " + item.getData());
-				}
+			Object[] args = new Object[2];
+			Button item = (Button) arg0.getSource();
+
+			if (item.getSelection()) {
+				args[0] = item.getText();
+				args[1] = item.getData();
+
+				logger.debug("Set " + item.getParent() + " to "
+						+ item.getData());
 			}
+		}
 	};
-	
+
 	public ArrayList<String> listPorts() {
 		ArrayList<String> portList = new ArrayList<String>();
 		@SuppressWarnings("unchecked")
@@ -361,7 +356,7 @@ public class ComPort {
 						}
 
 						try {
-							int localParity = 0;
+							/*int localParity = 0;
 							switch (parity.toString()) {
 							case "NONE":
 								localParity = 0;
@@ -375,8 +370,9 @@ public class ComPort {
 								localParity = 0;
 								break;
 							}
+							*/
 							serialPort.setSerialPortParams(baudRate, dataBits,
-									stopBits, localParity);
+									stopBits, parity);
 						} catch (UnsupportedCommOperationException e) {
 						}
 
@@ -418,7 +414,7 @@ public class ComPort {
 					+ getMethodName(1));
 			break;
 		case "Parity":
-			this.parity = Parity.valueOf(args[1].toString());
+			this.parity =  Integer.parseInt(args[1].toString());
 			logger.debug(args[0] + " " + args[1] + " passed to "
 					+ getMethodName(1));
 			break;
@@ -479,7 +475,6 @@ public class ComPort {
 	}
 
 	// class ComPortShell {
-
 
 	// }
 }
