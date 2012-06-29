@@ -70,8 +70,8 @@ public class StartUp {
 	}
 
 	private void createPopUps() {
-		ComPortShell cShell = new ComPortShell();
-		cShell.open();
+		ComPort cShell = new ComPort();
+		cShell.changeConfig();
 	}
 
 	/**
