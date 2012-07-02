@@ -1,9 +1,19 @@
-import java.io.*;
-import java.util.*;
-import gnu.io.*;
+import gnu.io.CommPortIdentifier;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
+import gnu.io.UnsupportedCommOperationException;
 
-import org.apache.log4j.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
+import org.apache.log4j.Logger;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -13,35 +23,24 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.MenuDetectEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.events.TouchEvent;
-import org.eclipse.swt.events.TouchListener;
 
 public class ComPort {
 	private static Logger logger = Logger.getRootLogger();
 
-	Enumeration<?> portList;
-	CommPortIdentifier portId;
-	String messageString = "Hello, world!";
-	SerialPort serialPort;
-	OutputStream outputStream;
-	boolean outputBufferEmptyFlag = false;
-	boolean connected = false;
-	String connectionStatusInfo = null;
-	String portName = "";
-	int baudRate = 19200;
-	int parity = 0;
-	int stopBits = 1;
-	int dataBits = 8;
+	private Enumeration<?> portList;
+	private CommPortIdentifier portId;
+	private SerialPort serialPort;
+	private OutputStream outputStream;
+	private boolean outputBufferEmptyFlag = false;
+	private boolean connected = false;
+	private String connectionStatusInfo = null;
+	private String portName = "";
+	private int baudRate = 19200;
+	private int parity = 0;
+	private int stopBits = 1;
+	private int dataBits = 8;
 
 	public boolean isConnected() {
-
 		return this.connected;
 	}
 
@@ -53,77 +52,47 @@ public class ComPort {
 		return this.portName;
 	}
 
-	public void setPortName(String portName) {
-		this.portName = portName;
-	}
-
 	public int getBaudRate() {
 		return this.baudRate;
-	}
-
-	public void setBaudRate(int baudRate) {
-		this.baudRate = baudRate;
 	}
 
 	public int getParity() {
 		return this.parity;
 	}
 
-	public void setParity(int parity) {
-		this.parity = parity;
-	}
-
 	public int getStopBits() {
 		return this.stopBits;
-	}
-
-	public void setStopBits(int stopBits) {
-		this.stopBits = stopBits;
 	}
 
 	public int getDataBits() {
 		return this.dataBits;
 	}
 
-	public void setDataBits(int dataBits) {
-		this.dataBits = dataBits;
-	}
-
 	protected Shell shlPortConfig;
 	ArrayList<String> availableComPorts;
-
-	/**
-	 * Open the window.
-	 * 
-	 * @wbp.parser.entryPoint
-	 */
-	public void showConfigWindow() {
-		Display display = Display.getDefault();
-		createContents();
-
-		shlPortConfig.open();
-		shlPortConfig.layout();
-		while (!shlPortConfig.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-	}
 
 	public void showConfigWindow(ArrayList<String> availableComPorts) {
 		if (availableComPorts != null) {
 			this.availableComPorts = availableComPorts;
-			showConfigWindow();
-			logger.debug(getMethodName(1) + " port list is passed");
+			Display display = Display.getDefault();
+			createContents();
+
+			shlPortConfig.open();
+			shlPortConfig.layout();
+			while (!shlPortConfig.isDisposed()) {
+				if (!display.readAndDispatch()) {
+					display.sleep();
+				}
+			}
+			//showConfigWindow();
+			logger.debug(JUtil.getMethodName(1) + " port list is passed");
 		} else {
-			logger.debug(getMethodName(1) + " port list is null");
+			logger.debug(JUtil.getMethodName(1) + " port list is null");
 		}
 	}
 
-	/**
-	 * Create contents of the window.
-	 */
-	protected void createContents() {
+
+	private void createContents() {
 		shlPortConfig = new Shell();
 		shlPortConfig.setMinimumSize(new Point(100, 30));
 		shlPortConfig.setSize(378, 186);
@@ -141,15 +110,15 @@ public class ComPort {
 			}
 		});
 		FormData fd_btnTest = new FormData();
-		fd_btnTest.top = new FormAttachment(combo, 0, SWT.TOP);
-		fd_btnTest.right = new FormAttachment(grpDataBits, 0, SWT.RIGHT);
+		//fd_btnTest.top = new FormAttachment(combo, 0, SWT.TOP);
+		//fd_btnTest.right = new FormAttachment(grpDataBits, 0, SWT.RIGHT);
 		btnTest.setLayoutData(fd_btnTest);
 		btnTest.setText("TEST");
 
 	}
 
 	private void createComboPortList(Shell shlPortConfig2) {
-		combo = new Combo(shlPortConfig, SWT.NONE);
+		Combo combo = new Combo(shlPortConfig, SWT.NONE);
 		FormData fd_combo = new FormData();
 		fd_combo.top = new FormAttachment(0, 10);
 		fd_combo.left = new FormAttachment(0, 10);
@@ -163,10 +132,8 @@ public class ComPort {
 			
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 				logger.debug("#1");
 				
-				Object[] args = new Object[2];
 				Combo item = (Combo) arg0.getSource();
 				logger.debug("Set " + item.getText());
 				
@@ -175,7 +142,6 @@ public class ComPort {
 			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 				logger.debug("#2");
 				widgetSelected(arg0);
 			}
@@ -253,7 +219,7 @@ public class ComPort {
 		rbStop_TWO.setData(2);
 		rbStop_TWO.addSelectionListener(changeConfigAdapter);
 
-		grpDataBits = new Group(shlPortConfig, SWT.NONE);
+		Group grpDataBits = new Group(shlPortConfig, SWT.NONE);
 		fd_grpStopBits.right = new FormAttachment(grpDataBits, -6);
 		FormData fd_grpDataBits = new FormData();
 		fd_grpDataBits.top = new FormAttachment(grpBaudRate, 0, SWT.TOP);
@@ -277,7 +243,7 @@ public class ComPort {
 		rbDataBits_7.addSelectionListener(changeConfigAdapter);
 	}
 
-	SelectionAdapter changeConfigAdapter = new SelectionAdapter() {
+	private SelectionAdapter changeConfigAdapter = new SelectionAdapter() {
 		public void widgetSelected(SelectionEvent arg0) {
 			Object[] args = new Object[2];
 			Button item = (Button) arg0.getSource();
@@ -317,10 +283,8 @@ public class ComPort {
 			}
 		}
 	};
-	private Group grpDataBits;
-	private Combo combo;
 
-	public ArrayList<String> listPorts() {
+	private ArrayList<String> listPorts() {
 		ArrayList<String> portList = new ArrayList<String>();
 		@SuppressWarnings("unchecked")
 		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier
@@ -338,6 +302,7 @@ public class ComPort {
 		return portList;
 	}
 
+	/*
 	private String getPortTypeName(int portType) {
 		switch (portType) {
 		case CommPortIdentifier.PORT_I2C:
@@ -354,17 +319,15 @@ public class ComPort {
 			return "unknown type";
 		}
 	}
+	*/
 
-	/**
-	 * @wbp.parser.entryPoint
-	 */
-	public void changeConfig() {
+	public void configure() {
 		showConfigWindow(listPorts());
 	}
 
 	public boolean open(String portName) {
 		boolean portFound = false;
-		logger.debug(portName + " is passed to " + getMethodName(1));
+		logger.debug(portName + " is passed to " + JUtil.getMethodName(1));
 
 		if (isConnected()){
 			serialPort.close();
@@ -386,13 +349,15 @@ public class ComPort {
 						portFound = true;
 
 						try {
+							logger.debug("try to connect to port " + this.portName + " with baud rate " + this.baudRate);
 							serialPort = (SerialPort) portId.open(this.portName,
-									baudRate);
+									19200);
 							//serialPort = (SerialPort) portId.open(arg0)
-							
+							/*
 							logger.debug("SP isDTR = " + serialPort.isDTR());
 							logger.debug("SP isCD = " + serialPort.isCD());
 							logger.debug("SP isRTS = " + serialPort.isRTS());
+							*/
 							logger.debug("SP baud = " + serialPort.getBaudRate());
 							logger.debug("SP parity = " + serialPort.getParity());
 							logger.debug("SP stop = " + serialPort.getStopBits());
@@ -404,6 +369,7 @@ public class ComPort {
 						} catch (PortInUseException e) {
 							logger.debug("Port in use.");
 							connectionStatusInfo = "Port in use.";
+							connected = false;
 							continue;
 						}
 
@@ -417,8 +383,8 @@ public class ComPort {
 									stopBits, parity);
 							logger.debug(baudRate + "\n" + dataBits + "\n" + stopBits + "\n" + parity);
 						} catch (UnsupportedCommOperationException e) {
-						}
-
+						} 
+						
 						try {
 							serialPort.notifyOnOutputEmpty(true);
 						} catch (Exception e) {
@@ -443,41 +409,41 @@ public class ComPort {
 
 		return connected;
 	}
-
+/*	
 	public boolean open(Object[] args) {
 		switch ((String) args[0]) {
 		case "PortName":
 			this.portName = args[1].toString();
 			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ getMethodName(1));
+					+ JUtil.getMethodName(1));
 			break;
 		case "BaudRate":
 			this.baudRate = Integer.parseInt(args[1].toString());
 			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ getMethodName(1));
+					+ JUtil.getMethodName(1));
 			break;
 		case "Parity":
 			this.parity =  Integer.parseInt(args[1].toString());
 			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ getMethodName(1));
+					+ JUtil.getMethodName(1));
 			break;
 		case "StopBits":
 			this.stopBits = Integer.parseInt(args[1].toString());
 			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ getMethodName(1));
+					+ JUtil.getMethodName(1));
 			break;
 		case "DataBits":
 			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ getMethodName(1));
+					+ JUtil.getMethodName(1));
 			break;
 		default:
 			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ getMethodName(1));
+					+ JUtil.getMethodName(1));
 			break;
 		}
 		return open(this.portName);
 	}
-
+*/
 	public void close() {
 		try {
 			Thread.sleep(2000);
@@ -508,12 +474,5 @@ public class ComPort {
 		for (String s : messageList) {
 			write(s);
 		}
-	}
-
-	private String getMethodName(int stack) {
-		String functionName;
-		functionName = (new Exception().getStackTrace()[stack].getClassName()
-				+ "." + new Exception().getStackTrace()[stack].getMethodName());
-		return functionName;
 	}
 }
