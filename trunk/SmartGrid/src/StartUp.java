@@ -57,6 +57,7 @@ public class StartUp {
 	/**
 	 * Open the window.
 	 */
+	ComPort cShell = new ComPort();
 	public void open() {
 		Display display = Display.getDefault();
 		createContents();		
@@ -65,12 +66,13 @@ public class StartUp {
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
-			}
+			}			
 		}
+		cShell.close();		
 	}
-
+	
 	private void createPopUps() {
-		ComPort cShell = new ComPort();
+		//ComPort cShell = new ComPort();
 		cShell.changeConfig();
 	}
 
