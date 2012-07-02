@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 import gnu.io.*;
+
 import org.apache.log4j.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -131,18 +132,54 @@ public class ComPort {
 
 		createRadioButtonGroups(shlPortConfig);
 		createComboPortList(shlPortConfig);
+		
+		Button btnTest = new Button(shlPortConfig, SWT.NONE);
+		btnTest.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				write("TEST MESSAGE\n\r");
+			}
+		});
+		FormData fd_btnTest = new FormData();
+		fd_btnTest.top = new FormAttachment(combo, 0, SWT.TOP);
+		fd_btnTest.right = new FormAttachment(grpDataBits, 0, SWT.RIGHT);
+		btnTest.setLayoutData(fd_btnTest);
+		btnTest.setText("TEST");
 
 	}
 
 	private void createComboPortList(Shell shlPortConfig2) {
-		Combo combo = new Combo(shlPortConfig, SWT.NONE);
+		combo = new Combo(shlPortConfig, SWT.NONE);
 		FormData fd_combo = new FormData();
 		fd_combo.top = new FormAttachment(0, 10);
 		fd_combo.left = new FormAttachment(0, 10);
 		combo.setLayoutData(fd_combo);
+		combo.add("");
 		for (String s : this.availableComPorts) {
 			combo.add(s);
 		}
+		
+		combo.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				logger.debug("#1");
+				
+				Object[] args = new Object[2];
+				Combo item = (Combo) arg0.getSource();
+				logger.debug("Set " + item.getText());
+				
+				open(item.getText());
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				logger.debug("#2");
+				widgetSelected(arg0);
+			}
+		});
 	}
 
 	private void createRadioButtonGroups(Shell shlPortConfig2) {
@@ -216,7 +253,7 @@ public class ComPort {
 		rbStop_TWO.setData(2);
 		rbStop_TWO.addSelectionListener(changeConfigAdapter);
 
-		Group grpDataBits = new Group(shlPortConfig, SWT.NONE);
+		grpDataBits = new Group(shlPortConfig, SWT.NONE);
 		fd_grpStopBits.right = new FormAttachment(grpDataBits, -6);
 		FormData fd_grpDataBits = new FormData();
 		fd_grpDataBits.top = new FormAttachment(grpBaudRate, 0, SWT.TOP);
@@ -246,14 +283,42 @@ public class ComPort {
 			Button item = (Button) arg0.getSource();
 
 			if (item.getSelection()) {
-				args[0] = item.getText();
+				args[0] = item.getParent();
 				args[1] = item.getData();
 
-				logger.debug("Set " + item.getParent() + " to "
+				//x = args[0].toString();
+				
+				logger.debug("Set " + args[0].toString() + " to "
 						+ item.getData());
+				
+				switch (args[0].toString()) {
+				case "Group {Baud Rate}":
+					logger.debug("found Baud Rate");
+					baudRate = (int) args[1];
+					break;
+				case "Group {Parity}":
+					logger.debug("found Parity");
+					parity = (int) args[1];
+					break;
+				case "Group {Stop Bits}":
+					logger.debug("found Stop Bits");
+					stopBits = (int) args[1];
+					break;
+				case "Group {Data Bits}":
+					logger.debug("found Data Bits");
+					dataBits = (int) args[1];
+					break;
+
+				default:
+					logger.debug("foo bar");
+					break;
+				}
+
 			}
 		}
 	};
+	private Group grpDataBits;
+	private Combo combo;
 
 	public ArrayList<String> listPorts() {
 		ArrayList<String> portList = new ArrayList<String>();
@@ -294,33 +359,19 @@ public class ComPort {
 	 * @wbp.parser.entryPoint
 	 */
 	public void changeConfig() {
-		ArrayList<String> portList = new ArrayList<String>();
-		portList = listPorts();
-		// ComPortShell comPortShell = new ComPortShell();
-		// comPortShell.setPortList
-		// comPortShell.open(portList);
 		showConfigWindow(listPorts());
-
 	}
 
 	public boolean open(String portName) {
 		boolean portFound = false;
-		// String defaultPort = "/dev/term/a";
-		/*
-		 * if (((this.portName != null) && (this.portName == portName)) ||
-		 * ((this.portName != null) && (this.portName != portName))) {
-		 * serialPort.close(); }
-		 */
 		logger.debug(portName + " is passed to " + getMethodName(1));
 
-		if (isConnected())
+		if (isConnected()){
 			serialPort.close();
-		connected = false;
+			connected = false;
+		}
 
 		if (portName.length() > 0) {
-
-			// serialPort.close();
-
 			this.portName = portName;
 			portList = CommPortIdentifier.getPortIdentifiers();
 
@@ -335,12 +386,18 @@ public class ComPort {
 						portFound = true;
 
 						try {
-							serialPort = (SerialPort) portId.open(portName,
+							serialPort = (SerialPort) portId.open(this.portName,
 									baudRate);
+							//serialPort = (SerialPort) portId.open(arg0)
+							
 							logger.debug("SP isDTR = " + serialPort.isDTR());
 							logger.debug("SP isCD = " + serialPort.isCD());
 							logger.debug("SP isRTS = " + serialPort.isRTS());
-
+							logger.debug("SP baud = " + serialPort.getBaudRate());
+							logger.debug("SP parity = " + serialPort.getParity());
+							logger.debug("SP stop = " + serialPort.getStopBits());
+							logger.debug("SP data = " + serialPort.getDataBits());
+							
 							logger.debug("Port selected.");
 							connectionStatusInfo = "Port selected.";
 							connected = true;
@@ -356,23 +413,9 @@ public class ComPort {
 						}
 
 						try {
-							/*int localParity = 0;
-							switch (parity.toString()) {
-							case "NONE":
-								localParity = 0;
-								break;
-							case "ODD":
-								localParity = 1;
-								break;
-							case "EVEN":
-								localParity = 2;
-							default:
-								localParity = 0;
-								break;
-							}
-							*/
 							serialPort.setSerialPortParams(baudRate, dataBits,
 									stopBits, parity);
+							logger.debug(baudRate + "\n" + dataBits + "\n" + stopBits + "\n" + parity);
 						} catch (UnsupportedCommOperationException e) {
 						}
 
@@ -437,7 +480,7 @@ public class ComPort {
 
 	public void close() {
 		try {
-			Thread.sleep(2000); // Be sure data is xferred before closing
+			Thread.sleep(2000);
 		} catch (Exception e) {
 		}
 
@@ -473,8 +516,4 @@ public class ComPort {
 				+ "." + new Exception().getStackTrace()[stack].getMethodName());
 		return functionName;
 	}
-
-	// class ComPortShell {
-
-	// }
 }
