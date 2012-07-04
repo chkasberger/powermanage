@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Button;
 
 //import ComPort.ComPortShell;
 
@@ -98,6 +99,10 @@ public class StartUp {
 		
 		MenuItem mntmPortConfig = new MenuItem(menu_1, SWT.NONE);
 		mntmPortConfig.setText("Port Config");
+		
+		Button btnNewButton = new Button(shell, SWT.NONE);
+		btnNewButton.setBounds(200, 85, 75, 25);
+		btnNewButton.setText("New Button");
 		mntmPortConfig.addSelectionListener(new SelectionListener() {
 			
 			@Override
