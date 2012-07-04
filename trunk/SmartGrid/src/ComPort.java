@@ -1,4 +1,6 @@
+import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
+import gnu.io.CommPortOwnershipListener;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
@@ -72,7 +74,8 @@ public class ComPort {
 	ArrayList<String> availableComPorts;
 
 	public void showConfigWindow(ArrayList<String> availableComPorts) {
-		if (availableComPorts != null) {
+	//public void showConfigWindow() {
+			if (this.availableComPorts != null) {
 			this.availableComPorts = availableComPorts;
 			Display display = Display.getDefault();
 			createContents();
@@ -84,14 +87,16 @@ public class ComPort {
 					display.sleep();
 				}
 			}
-			//showConfigWindow();
+			// showConfigWindow();
 			logger.debug(JUtil.getMethodName(1) + " port list is passed");
 		} else {
 			logger.debug(JUtil.getMethodName(1) + " port list is null");
 		}
 	}
 
-
+	/**
+	 * @wbp.parser.entryPoint
+	 */
 	private void createContents() {
 		shlPortConfig = new Shell();
 		shlPortConfig.setMinimumSize(new Point(100, 30));
@@ -101,22 +106,21 @@ public class ComPort {
 
 		createRadioButtonGroups(shlPortConfig);
 		createComboPortList(shlPortConfig);
-		
+
 		Button btnTest = new Button(shlPortConfig, SWT.NONE);
+		btnTest.setText("TEST");
+		FormData fd_btnTest = new FormData();
+		fd_btnTest.top = new FormAttachment(0,10);
+		fd_btnTest.left = new FormAttachment(0,80);
+		btnTest.setLayoutData(fd_btnTest);
 		btnTest.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				write("TEST MESSAGE\n\r");
 			}
 		});
-		FormData fd_btnTest = new FormData();
-		//fd_btnTest.top = new FormAttachment(combo, 0, SWT.TOP);
-		//fd_btnTest.right = new FormAttachment(grpDataBits, 0, SWT.RIGHT);
-		btnTest.setLayoutData(fd_btnTest);
-		btnTest.setText("TEST");
-
 	}
-
+	
 	private void createComboPortList(Shell shlPortConfig2) {
 		Combo combo = new Combo(shlPortConfig, SWT.NONE);
 		FormData fd_combo = new FormData();
@@ -124,25 +128,22 @@ public class ComPort {
 		fd_combo.left = new FormAttachment(0, 10);
 		combo.setLayoutData(fd_combo);
 		combo.add("");
+
 		for (String s : this.availableComPorts) {
 			combo.add(s);
 		}
-		
+
 		combo.addSelectionListener(new SelectionListener() {
-			
+
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				logger.debug("#1");
-				
 				Combo item = (Combo) arg0.getSource();
-				logger.debug("Set " + item.getText());
-				
+				logger.info("Set " + item.getText());
 				open(item.getText());
 			}
-			
-			@Override
+
+		@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
-				logger.debug("#2");
 				widgetSelected(arg0);
 			}
 		});
@@ -252,11 +253,9 @@ public class ComPort {
 				args[0] = item.getParent();
 				args[1] = item.getData();
 
-				//x = args[0].toString();
-				
 				logger.debug("Set " + args[0].toString() + " to "
 						+ item.getData());
-				
+
 				switch (args[0].toString()) {
 				case "Group {Baud Rate}":
 					logger.debug("found Baud Rate");
@@ -274,12 +273,11 @@ public class ComPort {
 					logger.debug("found Data Bits");
 					dataBits = (int) args[1];
 					break;
-
 				default:
 					logger.debug("foo bar");
 					break;
 				}
-
+				reConfigurePortSettings();
 			}
 		}
 	};
@@ -289,47 +287,39 @@ public class ComPort {
 		@SuppressWarnings("unchecked")
 		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier
 				.getPortIdentifiers();
-
+		
 		while (portEnum.hasMoreElements()) {
 			CommPortIdentifier portIdentifier = portEnum.nextElement();
 			portList.add(portIdentifier.getName());
+			
+			logger.debug(portIdentifier.getName());
 		}
-
-		for (String s : portList) {
-			logger.debug(s);
-		}
-
 		return portList;
 	}
 
 	/*
-	private String getPortTypeName(int portType) {
-		switch (portType) {
-		case CommPortIdentifier.PORT_I2C:
-			return "I2C";
-		case CommPortIdentifier.PORT_PARALLEL:
-			return "Parallel";
-		case CommPortIdentifier.PORT_RAW:
-			return "Raw";
-		case CommPortIdentifier.PORT_RS485:
-			return "RS485";
-		case CommPortIdentifier.PORT_SERIAL:
-			return "Serial";
-		default:
-			return "unknown type";
-		}
-	}
-	*/
+	 * private String getPortTypeName(int portType) { switch (portType) { case
+	 * CommPortIdentifier.PORT_I2C: return "I2C"; case
+	 * CommPortIdentifier.PORT_PARALLEL: return "Parallel"; case
+	 * CommPortIdentifier.PORT_RAW: return "Raw"; case
+	 * CommPortIdentifier.PORT_RS485: return "RS485"; case
+	 * CommPortIdentifier.PORT_SERIAL: return "Serial"; default: return
+	 * "unknown type"; } }
+	 */
 
 	public void configure() {
 		showConfigWindow(listPorts());
+	}
+
+	protected void reConfigurePortSettings() {
+		open(this.portName);
 	}
 
 	public boolean open(String portName) {
 		boolean portFound = false;
 		logger.debug(portName + " is passed to " + JUtil.getMethodName(1));
 
-		if (isConnected()){
+		if (isConnected()) {
 			serialPort.close();
 			connected = false;
 		}
@@ -349,25 +339,14 @@ public class ComPort {
 						portFound = true;
 
 						try {
-							logger.debug("try to connect to port " + this.portName + " with baud rate " + this.baudRate);
-							serialPort = (SerialPort) portId.open(this.portName,
-									19200);
-							//serialPort = (SerialPort) portId.open(arg0)
-							/*
-							logger.debug("SP isDTR = " + serialPort.isDTR());
-							logger.debug("SP isCD = " + serialPort.isCD());
-							logger.debug("SP isRTS = " + serialPort.isRTS());
-							*/
-							logger.debug("SP baud = " + serialPort.getBaudRate());
-							logger.debug("SP parity = " + serialPort.getParity());
-							logger.debug("SP stop = " + serialPort.getStopBits());
-							logger.debug("SP data = " + serialPort.getDataBits());
-							
-							logger.debug("Port selected.");
+							logger.debug("try to connect to port "
+									+ this.portName + " with baud rate "
+									+ this.baudRate);
+							serialPort = (SerialPort) portId.open(
+									this.portName, 19200);
 							connectionStatusInfo = "Port selected.";
 							connected = true;
 						} catch (PortInUseException e) {
-							logger.debug("Port in use.");
 							connectionStatusInfo = "Port in use.";
 							connected = false;
 							continue;
@@ -381,10 +360,11 @@ public class ComPort {
 						try {
 							serialPort.setSerialPortParams(baudRate, dataBits,
 									stopBits, parity);
-							logger.debug(baudRate + "\n" + dataBits + "\n" + stopBits + "\n" + parity);
+							logger.debug(baudRate + "\n" + dataBits + "\n"
+									+ stopBits + "\n" + parity);
 						} catch (UnsupportedCommOperationException e) {
-						} 
-						
+						}
+
 						try {
 							serialPort.notifyOnOutputEmpty(true);
 						} catch (Exception e) {
@@ -396,73 +376,66 @@ public class ComPort {
 			}
 
 			if (!portFound) {
-				logger.debug("port " + this.portName + " not found.");
 				connectionStatusInfo = "port " + this.portName + " not found.";
 				connected = false;
 			}
 
 		} else {
-			logger.debug("no Port assigned to function.\n\r");
 			connectionStatusInfo = "no Port assigned to function.";
 			connected = false;
 		}
 
+		logger.debug(connectionStatusInfo + "\n\r");
+
 		return connected;
 	}
-/*	
+
 	public boolean open(Object[] args) {
 		switch ((String) args[0]) {
 		case "PortName":
 			this.portName = args[1].toString();
-			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ JUtil.getMethodName(1));
 			break;
 		case "BaudRate":
 			this.baudRate = Integer.parseInt(args[1].toString());
-			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ JUtil.getMethodName(1));
 			break;
 		case "Parity":
-			this.parity =  Integer.parseInt(args[1].toString());
-			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ JUtil.getMethodName(1));
+			this.parity = Integer.parseInt(args[1].toString());
 			break;
 		case "StopBits":
 			this.stopBits = Integer.parseInt(args[1].toString());
-			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ JUtil.getMethodName(1));
 			break;
 		case "DataBits":
-			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ JUtil.getMethodName(1));
+			this.dataBits = Integer.parseInt(args[1].toString());
 			break;
 		default:
-			logger.debug(args[0] + " " + args[1] + " passed to "
-					+ JUtil.getMethodName(1));
 			break;
 		}
+		logger.debug(args[0] + " " + args[1] + " passed to "
+				+ JUtil.getMethodName(1));
 		return open(this.portName);
 	}
-*/
+
 	public void close() {
 		try {
 			Thread.sleep(2000);
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		serialPort.close();
 		logger.debug("Closed Port " + this.portName);
-		// System.exit(1);
 	}
 
 	public void write(String messageString) {
-
-		logger.debug("Writing \"" + messageString + "\" to "
-				+ serialPort.getName());
-
 		try {
 			outputStream.write(messageString.getBytes());
+			logger.debug(messageString);
 		} catch (IOException e) {
+			e.printStackTrace();
+			logger.fatal("write not possible");
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			logger.fatal("no port assigned");
 		}
 	}
 
