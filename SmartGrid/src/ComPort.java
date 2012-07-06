@@ -1,10 +1,9 @@
-import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
-import gnu.io.CommPortOwnershipListener;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
+//import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -13,9 +12,12 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -25,6 +27,9 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.widgets.Label;
+
 
 public class ComPort {
 	private static Logger logger = Logger.getRootLogger();
@@ -41,7 +46,12 @@ public class ComPort {
 	private int parity = 0;
 	private int stopBits = 1;
 	private int dataBits = 8;
-
+	protected Shell shlPortConfig;
+	ArrayList<String> availableComPorts;
+	Combo combo;
+	boolean shellExists = false;
+	static Label lblConnectionStatus;
+	
 	public boolean isConnected() {
 		return this.connected;
 	}
@@ -70,24 +80,22 @@ public class ComPort {
 		return this.dataBits;
 	}
 
-	protected Shell shlPortConfig;
-	ArrayList<String> availableComPorts;
-
 	public void showConfigWindow(ArrayList<String> availableComPorts) {
-	//public void showConfigWindow() {
-			if (this.availableComPorts != null) {
+		if (availableComPorts != null) {
 			this.availableComPorts = availableComPorts;
 			Display display = Display.getDefault();
 			createContents();
 
 			shlPortConfig.open();
 			shlPortConfig.layout();
+			shellExists = true;
+			
 			while (!shlPortConfig.isDisposed()) {
 				if (!display.readAndDispatch()) {
 					display.sleep();
 				}
 			}
-			// showConfigWindow();
+
 			logger.debug(JUtil.getMethodName(1) + " port list is passed");
 		} else {
 			logger.debug(JUtil.getMethodName(1) + " port list is null");
@@ -98,9 +106,10 @@ public class ComPort {
 	 * @wbp.parser.entryPoint
 	 */
 	private void createContents() {
-		shlPortConfig = new Shell();
+		shlPortConfig = new Shell(SWT.BORDER);
+		shlPortConfig.setTouchEnabled(true);
 		shlPortConfig.setMinimumSize(new Point(100, 30));
-		shlPortConfig.setSize(378, 186);
+		shlPortConfig.setSize(364, 133);
 		shlPortConfig.setText("Port Config");
 		shlPortConfig.setLayout(new FormLayout());
 
@@ -110,9 +119,30 @@ public class ComPort {
 		Button btnTest = new Button(shlPortConfig, SWT.NONE);
 		btnTest.setText("TEST");
 		FormData fd_btnTest = new FormData();
-		fd_btnTest.top = new FormAttachment(0,10);
-		fd_btnTest.left = new FormAttachment(0,80);
+		fd_btnTest.top = new FormAttachment(combo, -2, SWT.TOP);
 		btnTest.setLayoutData(fd_btnTest);
+		
+		Button btnHide = new Button(shlPortConfig, SWT.NONE);
+		fd_btnTest.right = new FormAttachment(btnHide, -6);
+		btnHide.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				shlPortConfig.setVisible(false);
+			}
+		});
+		FormData fd_btnHide = new FormData();
+		fd_btnHide.left = new FormAttachment(100, -39);
+		fd_btnHide.bottom = new FormAttachment(grpDataBits);
+		fd_btnHide.right = new FormAttachment(100, -14);
+		btnHide.setLayoutData(fd_btnHide);
+		btnHide.setText("X");
+		
+		lblConnectionStatus = new Label(shlPortConfig, SWT.NONE);
+		FormData fd_lblConnectionStatus = new FormData();
+		fd_lblConnectionStatus.bottom = new FormAttachment(btnTest, 20);
+		fd_lblConnectionStatus.left = new FormAttachment(combo, 6);
+		lblConnectionStatus.setLayoutData(fd_lblConnectionStatus);
+		lblConnectionStatus.setText("not connected");
 		btnTest.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -120,19 +150,22 @@ public class ComPort {
 			}
 		});
 	}
-	
+
 	private void createComboPortList(Shell shlPortConfig2) {
-		Combo combo = new Combo(shlPortConfig, SWT.NONE);
+		combo = new Combo(shlPortConfig, SWT.READ_ONLY);
 		FormData fd_combo = new FormData();
+		fd_combo.right = new FormAttachment(grpBaudRate, 90);
+		fd_combo.left = new FormAttachment(grpBaudRate, 0, SWT.LEFT);
+		//fd_combo.bottom = new FormAttachment(grpDataBits);
 		fd_combo.top = new FormAttachment(0, 10);
-		fd_combo.left = new FormAttachment(0, 10);
 		combo.setLayoutData(fd_combo);
 		combo.add("");
 
 		for (String s : this.availableComPorts) {
 			combo.add(s);
+			logger.debug("Combo Background is " + combo.getForeground());
 		}
-
+		
 		combo.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -140,43 +173,54 @@ public class ComPort {
 				Combo item = (Combo) arg0.getSource();
 				logger.info("Set " + item.getText());
 				open(item.getText());
+
 			}
 
-		@Override
+			@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
 				widgetSelected(arg0);
 			}
 		});
 	}
 
+	private FormData fd_grpParity;
+	private Group grpBaudRate;
+	private Group grpDataBits;
+
 	private void createRadioButtonGroups(Shell shlPortConfig2) {
-		Group grpBaudRate = new Group(shlPortConfig, SWT.NONE);
+		grpBaudRate = new Group(shlPortConfig, SWT.NONE);
 		FormData fd_grpBaudRate = new FormData();
-		fd_grpBaudRate.bottom = new FormAttachment(0, 119);
+		fd_grpBaudRate.bottom = new FormAttachment(combo, 120);
+		fd_grpBaudRate.top = new FormAttachment(combo, 35);
+		fd_grpBaudRate.left = new FormAttachment(0, 17);
 		fd_grpBaudRate.right = new FormAttachment(0, 90);
 		grpBaudRate.setLayoutData(fd_grpBaudRate);
 		grpBaudRate.setText("Baud Rate");
 
+		Button rbBaud_57600 = new Button(grpBaudRate, SWT.RADIO);
+		rbBaud_57600.addSelectionListener(changeConfigAdapter);
+		rbBaud_57600.setBounds(10, 20, 60, 16);
+		rbBaud_57600.setText("57600");
+		rbBaud_57600.setData(57600);
+
 		Button rbBaud_19200 = new Button(grpBaudRate, SWT.RADIO);
 		rbBaud_19200.addSelectionListener(changeConfigAdapter);
-
-		rbBaud_19200.setBounds(10, 20, 60, 16);
+		rbBaud_19200.setBounds(10, 40, 60, 16);
 		rbBaud_19200.setText("19200");
 		rbBaud_19200.setData(19200);
 		rbBaud_19200.setSelection(true);
 
 		Button rbBaud_9600 = new Button(grpBaudRate, SWT.RADIO);
-		rbBaud_9600.setBounds(10, 40, 60, 16);
+		rbBaud_9600.setBounds(10, 60, 60, 16);
 		rbBaud_9600.setText("9600");
 		rbBaud_9600.setData(9600);
 		rbBaud_9600.addSelectionListener(changeConfigAdapter);
 
-		Group grpParity = new Group(shlPortConfig, SWT.SHADOW_IN);
-		FormData fd_grpParity = new FormData();
-		fd_grpParity.top = new FormAttachment(grpBaudRate, 0, SWT.TOP);
-		fd_grpParity.right = new FormAttachment(grpBaudRate, 92, SWT.RIGHT);
-		fd_grpParity.left = new FormAttachment(grpBaudRate, 12);
-		fd_grpParity.bottom = new FormAttachment(0, 148);
+		grpParity = new Group(shlPortConfig, SWT.SHADOW_IN);
+		fd_grpParity = new FormData();
+		fd_grpParity.left = new FormAttachment(grpBaudRate, 6);
+		fd_grpParity.bottom = new FormAttachment(grpBaudRate, 0, SWT.BOTTOM);
+		fd_grpParity.top = new FormAttachment(0, 35);
 		grpParity.setLayoutData(fd_grpParity);
 		grpParity.setText("Parity");
 
@@ -200,10 +244,11 @@ public class ComPort {
 		rbParity_EVEN.addSelectionListener(changeConfigAdapter);
 
 		Group grpStopBits = new Group(shlPortConfig, SWT.NONE);
+		fd_grpParity.right = new FormAttachment(100, -192);
 		FormData fd_grpStopBits = new FormData();
 		fd_grpStopBits.left = new FormAttachment(grpParity, 6);
 		fd_grpStopBits.top = new FormAttachment(grpBaudRate, 0, SWT.TOP);
-		fd_grpStopBits.bottom = new FormAttachment(0, 119);
+		fd_grpStopBits.bottom = new FormAttachment(0, 120);
 		grpStopBits.setLayoutData(fd_grpStopBits);
 		grpStopBits.setText("Stop Bits");
 
@@ -220,13 +265,13 @@ public class ComPort {
 		rbStop_TWO.setData(2);
 		rbStop_TWO.addSelectionListener(changeConfigAdapter);
 
-		Group grpDataBits = new Group(shlPortConfig, SWT.NONE);
-		fd_grpStopBits.right = new FormAttachment(grpDataBits, -6);
+		grpDataBits = new Group(shlPortConfig, SWT.NONE);
+		fd_grpStopBits.right = new FormAttachment(100, -106);
 		FormData fd_grpDataBits = new FormData();
+		fd_grpDataBits.bottom = new FormAttachment(grpBaudRate, 0, SWT.BOTTOM);
 		fd_grpDataBits.top = new FormAttachment(grpBaudRate, 0, SWT.TOP);
-		fd_grpDataBits.left = new FormAttachment(0, 274);
-		fd_grpDataBits.bottom = new FormAttachment(0, 119);
-		fd_grpDataBits.right = new FormAttachment(0, 354);
+		fd_grpDataBits.left = new FormAttachment(grpStopBits, 6);
+		fd_grpDataBits.right = new FormAttachment(0, 348);
 		grpDataBits.setLayoutData(fd_grpDataBits);
 		grpDataBits.setText("Data Bits");
 
@@ -281,21 +326,7 @@ public class ComPort {
 			}
 		}
 	};
-
-	private ArrayList<String> listPorts() {
-		ArrayList<String> portList = new ArrayList<String>();
-		@SuppressWarnings("unchecked")
-		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier
-				.getPortIdentifiers();
-		
-		while (portEnum.hasMoreElements()) {
-			CommPortIdentifier portIdentifier = portEnum.nextElement();
-			portList.add(portIdentifier.getName());
-			
-			logger.debug(portIdentifier.getName());
-		}
-		return portList;
-	}
+	private Group grpParity;
 
 	/*
 	 * private String getPortTypeName(int portType) { switch (portType) { case
@@ -308,13 +339,44 @@ public class ComPort {
 	 */
 
 	public void configure() {
-		showConfigWindow(listPorts());
+		if (!shellExists)
+			showConfigWindow(listPorts());
+		else
+			shlPortConfig.setVisible(true);
 	}
 
 	protected void reConfigurePortSettings() {
-		open(this.portName);
+		if(open(this.portName)){
+			lblConnectionStatus.setText("Port connected");
+		}else{
+			lblConnectionStatus.setText("Port not connected");
+		}
+		
 	}
+	
+	public void dispose(){
+		shlPortConfig.close();
+		shlPortConfig.dispose();
+	}
+	
+	private ArrayList<String> listPorts() {
+		ArrayList<String> portList = new ArrayList<String>();
+		@SuppressWarnings("unchecked")
+		java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier
+				.getPortIdentifiers();
 
+		while (portEnum.hasMoreElements()) {
+			CommPortIdentifier portIdentifier = portEnum.nextElement();
+			portList.add(portIdentifier.getName());
+		}
+
+		for (String s : portList) {
+			logger.debug(s);
+		}
+
+		return portList;
+	}
+	
 	public boolean open(String portName) {
 		boolean portFound = false;
 		logger.debug(portName + " is passed to " + JUtil.getMethodName(1));
