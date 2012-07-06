@@ -3,6 +3,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Display;
@@ -20,6 +22,7 @@ public class StartUp {
 	protected Shell shell;
 	private static Logger logger = Logger.getRootLogger();
 	static Level logLevel = Level.DEBUG;
+	ComPort cShell = new ComPort();
 
 	/**
 	 * Launch the application.
@@ -58,7 +61,6 @@ public class StartUp {
 	/**
 	 * Open the window.
 	 */
-	ComPort cShell = new ComPort();
 	public void open() {
 		Display display = Display.getDefault();
 		createContents();		
@@ -67,9 +69,9 @@ public class StartUp {
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
-			}			
+			} 
 		}
-		cShell.close();		
+
 	}
 	
 	private void createPopUps() {
@@ -81,12 +83,18 @@ public class StartUp {
 	 * Create contents of the window.
 	 */
 	protected void createContents() {
-		
-		
-		
 		shell = new Shell();
 		shell.setSize(450, 300);
 		shell.setText("SWT Application");
+		shell.addDisposeListener(new DisposeListener() {
+			
+			@Override
+			public void widgetDisposed(DisposeEvent arg0) {
+				// TODO Auto-generated method stub
+				cShell.close();
+				cShell.dispose();
+			}
+		});
 		
 		Menu menu = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menu);
