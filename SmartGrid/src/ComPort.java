@@ -139,10 +139,11 @@ public class ComPort {
 		
 		lblConnectionStatus = new Label(shlPortConfig, SWT.NONE);
 		FormData fd_lblConnectionStatus = new FormData();
+		fd_lblConnectionStatus.right = new FormAttachment(combo, 86, SWT.RIGHT);
 		fd_lblConnectionStatus.bottom = new FormAttachment(btnTest, 20);
 		fd_lblConnectionStatus.left = new FormAttachment(combo, 6);
 		lblConnectionStatus.setLayoutData(fd_lblConnectionStatus);
-		lblConnectionStatus.setText("not connected");
+		lblConnectionStatus.setText("");
 		btnTest.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -173,7 +174,7 @@ public class ComPort {
 				Combo item = (Combo) arg0.getSource();
 				logger.info("Set " + item.getText());
 				open(item.getText());
-
+				reConfigurePortSettings();
 			}
 
 			@Override
@@ -348,10 +349,11 @@ public class ComPort {
 	protected void reConfigurePortSettings() {
 		if(open(this.portName)){
 			lblConnectionStatus.setText("Port connected");
+			//lblConnectionStatus.set
 		}else{
 			lblConnectionStatus.setText("Port not connected");
 		}
-		
+		shlPortConfig.redraw();
 	}
 	
 	public void dispose(){
