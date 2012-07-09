@@ -5,6 +5,8 @@ import org.apache.log4j.SimpleLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Display;
@@ -13,6 +15,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Text;
 
 //import ComPort.ComPortShell;
 
@@ -23,6 +26,8 @@ public class StartUp {
 	private static Logger logger = Logger.getRootLogger();
 	static Level logLevel = Level.DEBUG;
 	ComPort cShell = new ComPort();
+	private Text textSend;
+	private Text textReceive;
 
 	/**
 	 * Launch the application.
@@ -100,7 +105,7 @@ public class StartUp {
 		shell.setMenuBar(menu);
 		
 		MenuItem mntmNewSubmenu = new MenuItem(menu, SWT.CASCADE);
-		mntmNewSubmenu.setText("New SubMenu");
+		mntmNewSubmenu.setText("Edit");
 		
 		Menu menu_1 = new Menu(mntmNewSubmenu);
 		mntmNewSubmenu.setMenu(menu_1);
@@ -108,9 +113,25 @@ public class StartUp {
 		MenuItem mntmPortConfig = new MenuItem(menu_1, SWT.NONE);
 		mntmPortConfig.setText("Port Config");
 		
-		Button btnNewButton = new Button(shell, SWT.NONE);
-		btnNewButton.setBounds(200, 85, 75, 25);
-		btnNewButton.setText("New Button");
+		textSend = new Text(shell, SWT.BORDER);
+		textSend.setBounds(0, 0, 434, 21);
+		textSend.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent arg0) {
+				if(arg0.keyCode == 13)
+					logger.debug("confirmed text to send!");
+			}
+		});
+		
+		textReceive = new Text(shell, SWT.BORDER);
+		textReceive.setBounds(0, 27, 434, 205);
 		mntmPortConfig.addSelectionListener(new SelectionListener() {
 			
 			@Override
