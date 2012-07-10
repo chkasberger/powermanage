@@ -113,6 +113,9 @@ public class StartUp {
 		MenuItem mntmPortConfig = new MenuItem(menu_1, SWT.NONE);
 		mntmPortConfig.setText("Port Config");
 		
+		textReceive = new Text(shell, SWT.BORDER);
+		textReceive.setBounds(0, 27, 434, 205);
+		
 		textSend = new Text(shell, SWT.BORDER);
 		textSend.setBounds(0, 0, 434, 21);
 		textSend.addKeyListener(new KeyListener() {
@@ -125,13 +128,15 @@ public class StartUp {
 			
 			@Override
 			public void keyPressed(KeyEvent arg0) {
-				if(arg0.keyCode == 13)
+				if (arg0.keyCode == 13) {
 					logger.debug("confirmed text to send!");
+
+					String x = textReceive.getText();
+					textReceive.setText(x  + "\n\r\n\r" + cShell.read());
+				}
 			}
 		});
-		
-		textReceive = new Text(shell, SWT.BORDER);
-		textReceive.setBounds(0, 27, 434, 205);
+				
 		mntmPortConfig.addSelectionListener(new SelectionListener() {
 			
 			@Override
