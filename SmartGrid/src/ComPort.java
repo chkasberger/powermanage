@@ -144,12 +144,11 @@ public class ComPort {
 	}
 	
 	private void fillCombo(){
-		combo.clearSelection();
+		combo.removeAll();
 		combo.add("");
-		for (String s : this.availableComPorts) {
+		for (String s : listPorts()) {
 			combo.add(s);
-		}
-		
+		}		
 	}
 	private void createGUI() {
 		FormData fd_combo = new FormData();
@@ -169,6 +168,7 @@ public class ComPort {
 				Combo item = (Combo) arg0.getSource();
 				logger.info("Set " + item.getText());
 				//open(item.getText());
+				portName = item.getText();
 				reConfigurePortSettings();
 			}
 
@@ -183,7 +183,7 @@ public class ComPort {
 			@Override
 			public void handleEvent(Event arg0) {
 				// TODO Auto-generated method stub
-				logger.debug("foo-listener-bar");
+				logger.debug("foo-listener-bar" + JUtil.getMethodName(1));
 				fillCombo();
 			}
 		});
