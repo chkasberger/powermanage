@@ -20,9 +20,15 @@ import org.apache.log4j.Logger;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.DragDetectEvent;
+import org.eclipse.swt.events.DragDetectListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TouchEvent;
+import org.eclipse.swt.events.TouchListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
@@ -31,10 +37,15 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Label;
+
+import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class ComPort {
 	private static Logger logger = Logger.getRootLogger();
@@ -132,33 +143,48 @@ public class ComPort {
 		
 	}
 	
+	private void fillCombo(){
+		combo.clearSelection();
+		combo.add("");
+		for (String s : this.availableComPorts) {
+			combo.add(s);
+		}
+		
+	}
 	private void createGUI() {
 		FormData fd_combo = new FormData();
 		fd_combo.left = new FormAttachment(0, 17);
 		fd_combo.top = new FormAttachment(0, 10);
 		
 		combo = new Combo(shlPortConfig, SWT.READ_ONLY);
+		combo.setForeground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		combo.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLACK));
+		
 		combo.setLayoutData(fd_combo);
-		combo.add("");
-
-		for (String s : this.availableComPorts) {
-			combo.add(s);
-			logger.debug("Combo Background is " + combo.getForeground());
-		}
-
+		
 		combo.addSelectionListener(new SelectionListener() {
 
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				Combo item = (Combo) arg0.getSource();
 				logger.info("Set " + item.getText());
-				open(item.getText());
+				//open(item.getText());
 				reConfigurePortSettings();
 			}
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
 				widgetSelected(arg0);
+			}
+		});
+
+		combo.addListener(SWT.MouseDown, new Listener() {
+			
+			@Override
+			public void handleEvent(Event arg0) {
+				// TODO Auto-generated method stub
+				logger.debug("foo-listener-bar");
+				fillCombo();
 			}
 		});
 		
@@ -298,6 +324,7 @@ public class ComPort {
 		btnHide.setText("X");
 
 		lblConnectionStatus = new Label(shlPortConfig, SWT.NONE);
+		lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_YELLOW));
 		fd_combo.right = new FormAttachment(100, -251);
 		FormData fd_lblConnectionStatus = new FormData();
 		fd_lblConnectionStatus.right = new FormAttachment(combo, 86, SWT.RIGHT);
@@ -366,16 +393,19 @@ public class ComPort {
 	public void configure() {
 		if (!shellExists)
 			showConfigWindow(listPorts());
-		else
+		else {			
 			shlPortConfig.setVisible(true);
+		}
 	}
 
 	protected void reConfigurePortSettings() {
 		if (open(this.portName)) {
+			lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
 			lblConnectionStatus.setText("Port connected");
 			// lblConnectionStatus.set
 		} else {
 			lblConnectionStatus.setText("Port not connected");
+			lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));			
 		}
 		shlPortConfig.redraw();
 	}
@@ -404,6 +434,7 @@ public class ComPort {
 	}
 
 	public boolean open(String portName) {
+		logger.debug("function open() called from " + JUtil.getMethodName(2));
 		if (isConnected()) {
 			serialPort.close();
 			connected = false;
@@ -428,6 +459,8 @@ public class ComPort {
 					inputStream = serialPort.getInputStream();
 					outputStream = serialPort.getOutputStream();
 
+					logger.debug("got here now!");
+					
 					serialPort.addEventListener(new SerialPortEventListener() {
 						
 						@Override
@@ -565,7 +598,7 @@ public class ComPort {
 		return open(this.portName);
 	}
 
-	private class SerialReader implements Runnable{
+	private class SerialReader2 implements Runnable{
 
 		@Override
 		public void run() {
@@ -574,7 +607,8 @@ public class ComPort {
 		}
 		
 	}
-/*private class SerialReader implements Runnable {
+
+	private class SerialReader implements Runnable {
 		InputStream in;
 
 		public SerialReader(InputStream in) {
@@ -585,19 +619,19 @@ public class ComPort {
 			byte[] buffer = new byte[1024];
 			int len = -1, i, temp;
 			try {
-				logger.debug("foo-Thread-Bar");				
+				logger.debug("foo-Thread-Bar");
 				while (!end) {
 					if ((in.available()) > 0) {
 						if ((len = this.in.read(buffer)) > -1) {
 							for (i = 0; i < len; i++) {
 								temp = buffer[i];
-								 // adjust from C-Byte to Java-Byte
+								// adjust from C-Byte to Java-Byte
 								if (temp < 0)
 									temp += 256;
 								if (temp == divider) {
-									if  (numTempBytes > 0) {
-										//					contact.parseInput(id, numTempBytes,
-										//	tempBytes);
+									if (numTempBytes > 0) {
+										// contact.parseInput(id, numTempBytes,
+										// tempBytes);
 									}
 									numTempBytes = 0;
 								} else {
@@ -618,14 +652,12 @@ public class ComPort {
 				}
 				serialPort.close();
 				connected = false;
-				//contact.networkDisconnected(id);
-				//contact.writeLog(id, "connection has been interrupted");
+				// contact.networkDisconnected(id);
+				// contact.writeLog(id, "connection has been interrupted");
 			}
 		}
 	}
 
-	*/
-	
 	public void close() {
 		try {
 			Thread.sleep(2000);
@@ -659,12 +691,20 @@ public class ComPort {
 			write(s);
 		}
 	}
-	
-	public String read(){
+
+	public String read() {
 		try {
-			Thread.sleep(200);
-			byte[] x = new byte[100];
-			int input = inputStream.read(x);
+			Thread.sleep(2000);
+			byte[] x = new byte[5];
+			int input = serialPort.getInputStream().read(x);
+			
+			int buffInt = serialPort.getInputStream().read();
+			
+			
+			logger.debug("input stream has number " + inputStream.available());
+			
+			logger.debug(input);
+			logger.debug(buffInt);
 			
 			for(byte s : x){
 				logger.debug(s);	
@@ -677,6 +717,7 @@ public class ComPort {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		return "foo-dagoddamn-bar";
 		
 	}
