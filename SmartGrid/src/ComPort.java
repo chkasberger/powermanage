@@ -10,6 +10,7 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.Format;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -46,6 +47,8 @@ import org.eclipse.swt.widgets.Label;
 
 import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
 import org.eclipse.wb.swt.SWTResourceManager;
+
+import sun.io.Converters;
 
 public class ComPort {
 	private static Logger logger = Logger.getRootLogger();
@@ -336,7 +339,7 @@ public class ComPort {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				write("TEST");
-				read();
+				read(ReturnType.STRING);
 			}
 		});
 
@@ -433,6 +436,7 @@ public class ComPort {
 		return portList;
 	}
 
+	int x = 0;
 	public boolean open(String portName) {
 		logger.debug("function open() called from " + JUtil.getMethodName(2));
 		if (isConnected()) {
@@ -459,7 +463,8 @@ public class ComPort {
 					inputStream = serialPort.getInputStream();
 					outputStream = serialPort.getOutputStream();
 
-					logger.debug("got here now!");
+					x++;
+					logger.debug("this is the " + x + ". time of passing by");
 					
 					serialPort.addEventListener(new SerialPortEventListener() {
 						
@@ -598,16 +603,6 @@ public class ComPort {
 		return open(this.portName);
 	}
 
-	private class SerialReader2 implements Runnable{
-
-		@Override
-		public void run() {
-			// TODO Auto-generated method stub
-			
-		}
-		
-	}
-
 	private class SerialReader implements Runnable {
 		InputStream in;
 
@@ -671,8 +666,23 @@ public class ComPort {
 
 	public void write(String messageString) {
 		try {
-			outputStream.write(messageString.getBytes());
+			
+			//inputStream.reset();
+			
+			//outputStream.write( messageString.getBytes() );
+			outputStream.write( 0x31 );
+			outputStream.write( 0x01 );
+			outputStream.write( 0x00 );
+			outputStream.write( 0x00 );
+			outputStream.write( 0x00 );
+			outputStream.write( 0x01 );
+			outputStream.write( 0xFE );
+			outputStream.write( 0x71 );
+			outputStream.write( 0x32 );
+			
+			
 			logger.debug(messageString);
+			logger.debug("hashCode of outputstream is: " + outputStream.hashCode());
 		} catch (IOException e) {
 			e.printStackTrace();
 			logger.fatal("write not possible");
@@ -692,24 +702,49 @@ public class ComPort {
 		}
 	}
 
-	public String read() {
+	public enum ReturnType {
+	    BYTE, STRING, ASCII 
+	}
+
+	
+	public Object read(ReturnType returnType) {
+		Object returnValue = null;
+		byte[] buffer = new byte[0xff];
+		
 		try {
-			Thread.sleep(2000);
-			byte[] x = new byte[5];
-			int input = serialPort.getInputStream().read(x);
-			
-			int buffInt = serialPort.getInputStream().read();
-			
-			
+			Thread.sleep(1000);
+			int input = serialPort.getInputStream().read(buffer);
+			logger.debug("hashCode of inputstream is: " + inputStream.hashCode());
 			logger.debug("input stream has number " + inputStream.available());
-			
 			logger.debug(input);
-			logger.debug(buffInt);
-			
-			for(byte s : x){
-				logger.debug(s);	
+			/*for(byte s : buffer){
+				logger.debug(s);
 			}
-			
+			*/
+			switch(returnType){
+			case BYTE:
+				returnValue = (Object) buffer;
+				for(byte s : buffer){
+					logger.debug(s);
+				}
+				break;
+			case STRING:				
+				String y = null;
+				for(byte s : buffer){
+					y = y + ;
+				}
+				
+				returnValue = new String(buffer.toString());
+				
+				
+				
+				logger.debug("returnValue is: " + returnValue);
+				break;
+			case ASCII:
+				logger.debug("returnValue in ASCII not implemented yet!");
+				break;
+			}
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -718,7 +753,10 @@ public class ComPort {
 			e.printStackTrace();
 		}
 		
-		return "foo-dagoddamn-bar";
+		
+		
+		
+		return returnValue;
 		
 	}
 }
