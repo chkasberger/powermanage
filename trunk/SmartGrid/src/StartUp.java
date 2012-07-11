@@ -16,6 +16,8 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.events.SelectionAdapter;
 
 //import ComPort.ComPortShell;
 
@@ -114,10 +116,28 @@ public class StartUp {
 		mntmPortConfig.setText("Port Config");
 		
 		textReceive = new Text(shell, SWT.BORDER);
-		textReceive.setBounds(0, 27, 434, 205);
-		
+		textReceive.setBounds(0, 27, 218, 205);
+		textReceive.setEnabled(false);
 		textSend = new Text(shell, SWT.BORDER);
-		textSend.setBounds(0, 0, 434, 21);
+		textSend.setBounds(0, 0, 218, 21);
+		textSend.setText("310100000001FE7132");
+		
+		Group grpEncode = new Group(shell, SWT.NONE);
+		grpEncode.setText("Encode");
+		grpEncode.setBounds(242, 10, 70, 105);
+		
+		Button btnByte_0 = new Button(grpEncode, SWT.RADIO);
+		btnByte_0.setBounds(10, 24, 50, 16);
+		btnByte_0.setText("byte");
+		btnByte_0.setEnabled(true);
+		
+		Button btnByte_1 = new Button(grpEncode, SWT.RADIO);
+		btnByte_1.setText("String");
+		btnByte_1.setBounds(10, 46, 50, 16);
+		
+		Button btnByte_2 = new Button(grpEncode, SWT.RADIO);
+		btnByte_2.setText("ASCII");
+		btnByte_2.setBounds(10, 68, 50, 16);
 		textSend.addKeyListener(new KeyListener() {
 			
 			@Override
@@ -132,7 +152,8 @@ public class StartUp {
 					logger.debug("confirmed text to send!");
 
 					String x = textReceive.getText();
-					textReceive.setText(x  + "\n\r\n\r" + cShell.read());
+					cShell.write(textSend.getText());
+					textReceive.setText(x  + "\n\r\n\r" + cShell.read(ComPort.ReturnType.STRING));
 				}
 			}
 		});
