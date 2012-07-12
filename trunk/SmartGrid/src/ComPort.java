@@ -1,6 +1,7 @@
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
+import gnu.io.RXTXPort;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
@@ -16,6 +17,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.TooManyListenersException;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.eclipse.swt.SWT;
@@ -62,7 +64,8 @@ public class ComPort {
 	
 	private Enumeration<?> portList;
 	private CommPortIdentifier portId;
-	private SerialPort serialPort;
+	//private SerialPort serialPort;
+	private RXTXPort serialPort;
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private boolean outputBufferEmptyFlag = false;
@@ -402,13 +405,18 @@ public class ComPort {
 	}
 
 	protected void reConfigurePortSettings() {
-		if (open(this.portName)) {
-			lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
-			lblConnectionStatus.setText("Port connected");
-			// lblConnectionStatus.set
-		} else {
-			lblConnectionStatus.setText("Port not connected");
-			lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));			
+		try {
+			if (open(this.portName)) {
+				lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
+				lblConnectionStatus.setText("Port connected");
+				// lblConnectionStatus.set
+			} else {
+				lblConnectionStatus.setText("Port not connected");
+				lblConnectionStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));			
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		shlPortConfig.redraw();
 	}
@@ -437,7 +445,7 @@ public class ComPort {
 	}
 
 	int x = 0;
-	public boolean open(String portName) {
+	public boolean open(String portName) throws IOException {
 		logger.debug("function open() called from " + JUtil.getMethodName(2));
 		if (isConnected()) {
 			serialPort.close();
@@ -455,9 +463,9 @@ public class ComPort {
 				if (portIdentifier.isCurrentlyOwned()) {
 					logger.debug(id + "Error: Port is currently in use");
 				} else {
-					serialPort = (SerialPort) portIdentifier.open(
+					serialPort = (RXTXPort) portIdentifier.open(
 							"RTBug_network", 2000);
-					serialPort.setSerialPortParams(baudRate, dataBits,
+					serialPort. setSerialPortParams(baudRate, dataBits,
 							stopBits, parity);
 
 					inputStream = serialPort.getInputStream();
@@ -489,9 +497,6 @@ public class ComPort {
 				logger.debug(id + "the connection could not be made");
 				e.printStackTrace();
 			} catch (UnsupportedCommOperationException e) {
-				logger.debug(id + "the connection could not be made");
-				e.printStackTrace();
-			} catch (IOException e) {
 				logger.debug(id + "the connection could not be made");
 				e.printStackTrace();
 			} catch (TooManyListenersException e) {
@@ -579,6 +584,7 @@ public class ComPort {
 	}
 
 	public boolean open(Object[] args) {
+		boolean ack = false;
 		switch ((String) args[0]) {
 		case "PortName":
 			this.portName = args[1].toString();
@@ -600,7 +606,13 @@ public class ComPort {
 		}
 		logger.debug(args[0] + " " + args[1] + " passed to "
 				+ JUtil.getMethodName(1));
-		return open(this.portName);
+		try {
+			ack = open(this.portName);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return ack;
 	}
 
 	private class SerialReader implements Runnable {
@@ -670,6 +682,7 @@ public class ComPort {
 			//inputStream.reset();
 			
 			//outputStream.write( messageString.getBytes() );
+			/*
 			outputStream.write( 0x31 );
 			outputStream.write( 0x01 );
 			outputStream.write( 0x00 );
@@ -679,13 +692,32 @@ public class ComPort {
 			outputStream.write( 0xFE );
 			outputStream.write( 0x71 );
 			outputStream.write( 0x32 );
+			*/
+			//String yz = Converters.
+
+
+			int[] intArray = new int[messageString.length()/2];
+			String[] stringArray = new String[messageString.length()/2];
+			byte[] byteArray = new byte[messageString.length()/2];
+			String x = null;
 			
+			//String[] subString = null;
+			for(int i = 0;  i <= stringArray.length; i++){
+				stringArray[i] = "0x" + messageString.substring(i*2,i*2+2);
+				x = messageString.substring(i*2,i*2+1);
+				intArray[i] = Integer.decode(stringArray[i]);
+				byteArray[i] = (byte)intArray[i];
+			}
+			
+			try {
+				outputStream.write(byteArray);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			logger.debug(messageString);
 			logger.debug("hashCode of outputstream is: " + outputStream.hashCode());
-		} catch (IOException e) {
-			e.printStackTrace();
-			logger.fatal("write not possible");
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 			logger.fatal("no port assigned");
@@ -731,7 +763,7 @@ public class ComPort {
 			case STRING:				
 				String y = null;
 				for(byte s : buffer){
-					y = y + ;
+					//y = y + ;
 				}
 				
 				returnValue = new String(buffer.toString());
