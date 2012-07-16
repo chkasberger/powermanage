@@ -90,6 +90,7 @@ public class StartUp {
 	 * Create contents of the window.
 	 */
 	protected void createContents() {
+		cShell.configure("COM1",19200);
 		shell = new Shell();
 		shell.setSize(450, 300);
 		shell.setText("SWT Application");
@@ -152,7 +153,17 @@ public class StartUp {
 					logger.debug("confirmed text to send!");
 
 					String x = textReceive.getText();
-					cShell.write(textSend.getText());
+					byte[] byteArray2 = {0x31,0x01,0x00,0x00,0x00,0x01,(byte) 0xFE,0x71,0x32};
+					byte[] byteArray = new byte[byteArray2.length];
+					
+					int i = 0;
+					while(i < byteArray.length){
+						byteArray[i] = (byte) (byteArray2[i] & 0xff);
+						i++;
+					}
+					
+					cShell.write(byteArray);
+					//cShell.write(textSend.getText());
 					textReceive.setText(x  + "\n\r\n\r" + cShell.read(ComPort.ReturnType.STRING));
 				}
 			}
