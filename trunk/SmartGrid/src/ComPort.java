@@ -403,7 +403,16 @@ public class ComPort {
 			shlPortConfig.setVisible(true);
 		}
 	}
-
+	public void configure(String string, int i) {
+		// TODO Auto-generated method stub
+		this.baudRate = i;
+		try {
+			open(string);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	protected void reConfigurePortSettings() {
 		try {
 			if (open(this.portName)) {
@@ -678,31 +687,13 @@ public class ComPort {
 
 	public void write(String messageString) {
 		try {
-			
-			//inputStream.reset();
-			
-			//outputStream.write( messageString.getBytes() );
-			/*
-			outputStream.write( 0x31 );
-			outputStream.write( 0x01 );
-			outputStream.write( 0x00 );
-			outputStream.write( 0x00 );
-			outputStream.write( 0x00 );
-			outputStream.write( 0x01 );
-			outputStream.write( 0xFE );
-			outputStream.write( 0x71 );
-			outputStream.write( 0x32 );
-			*/
-			//String yz = Converters.
-
-
 			int[] intArray = new int[messageString.length()/2];
 			String[] stringArray = new String[messageString.length()/2];
 			byte[] byteArray = new byte[messageString.length()/2];
 			String x = null;
 			
 			//String[] subString = null;
-			for(int i = 0;  i <= stringArray.length; i++){
+			for(int i = 0;  i < stringArray.length; i++){
 				stringArray[i] = "0x" + messageString.substring(i*2,i*2+2);
 				x = messageString.substring(i*2,i*2+1);
 				intArray[i] = Integer.decode(stringArray[i]);
@@ -723,16 +714,76 @@ public class ComPort {
 			logger.fatal("no port assigned");
 		}
 	}
-
-	public void writeln(String messageString) {
-		write(messageString + "\n\r");
-	}
-
-	public void write(List<String> messageList) {
-		for (String s : messageList) {
-			write(s);
+    public static byte[] convertHexToBytes(String hex) {
+        byte[] result = null;
+        if (hex != null) {
+            // remove all non alphanumeric chars like colons, whitespace, slashes
+            hex = hex.replaceAll("[^a-zA-Z0-9]", "");
+            // from http://forums.sun.com/thread.jspa?threadID=546486
+            // (using BigInteger to convert to byte array messes up by adding extra 0 if first byte > 7F and this method
+            //  will not rid of leading zeroes like the flawed method byte[] bts = new BigInteger(hex, 16).toByteArray();)
+            result = new byte[hex.length() / 2];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = (byte) Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
+            }
+        }
+		System.out.println("lenientHexToBytes(" + hex + ") returned '"
+				+ new String(result) + "'");
+		for (byte b : result) {
+			 int i = b & 0xFF;	
+			 
+			logger.debug(String.format("fooBarResultOfConversion\t" + b + "\t" + Integer.toHexString(i)));
 		}
+		logger.debug(String.format("fooBarResultOfConversion" + result.toString(),16));
+        return result;
+    }
+	public void write(byte message) {
+		String hexStr = "02303033434333d3037313131303131323639393130333131303139033f";
+		byte[] unsignedByte = convertHexToBytes(hexStr);
+		try {
+			serialPort.getOutputStream().write(unsignedByte);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			serialPort.getOutputStream().flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}   
+		
+		/*
+		byte[] byteArray = new byte[1];
+		byteArray[0] = message;
+		try {
+			outputStream.write(byteArray);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+	}	
+	
+	public void write(byte[] message) {
+
+		String hexStr = "02303033434333d3037313131303131323639393130333131303139033ff";
+		byte[] unsignedByte = convertHexToBytes(hexStr);
+		try {
+			serialPort.getOutputStream().write(unsignedByte);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			serialPort.getOutputStream().flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}   
 	}
+	
+
 
 	public enum ReturnType {
 	    BYTE, STRING, ASCII 
@@ -767,9 +818,6 @@ public class ComPort {
 				}
 				
 				returnValue = new String(buffer.toString());
-				
-				
-				
 				logger.debug("returnValue is: " + returnValue);
 				break;
 			case ASCII:
@@ -784,11 +832,10 @@ public class ComPort {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
-		
+
 		return returnValue;
 		
 	}
+
+
 }
