@@ -14,3 +14,4 @@ public class JUtil {
 		return functionName;
 	}
 }
+//http://www.mayor.de/lian98/doc.de/html/g_iec62056_struct.htm
