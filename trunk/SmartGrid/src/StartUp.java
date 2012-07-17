@@ -27,6 +27,8 @@ public class StartUp {
 	protected Shell shell;
 	private static Logger logger = Logger.getRootLogger();
 	static Level logLevel = Level.DEBUG;
+    // ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
+	
 	ComPort cShell = new ComPort();
 	private Text textSend;
 	private Text textReceive;
@@ -50,19 +52,11 @@ public class StartUp {
                 ConsoleAppender consoleAppender = new ConsoleAppender(layout);
                 logger.setLevel(logLevel);
                 logger.addAppender(consoleAppender);
-                // FileAppender fileAppender = new FileAppender( layout, "logs/"+
-                // logLevel +".log", false );
-                // logger.addAppender( fileAppender );
-                // ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
+
 
         } catch (Exception ex) {
-                logger.debug(ex);
+                logger.debug(ex + "@" + JUtil.getMethodName(1));
         }
-        logger.debug("Meine Debug-Meldung");
-        logger.info("Meine Info-Meldung");
-        logger.warn("Meine Warn-Meldung");
-        logger.error("Meine Error-Meldung");
-        logger.fatal("Meine Fatal-Meldung");
 }
 
 	/**
@@ -80,17 +74,17 @@ public class StartUp {
 		}
 
 	}
-	
+	Menu menu;
 	private void createPopUps() {
-		//ComPort cShell = new ComPort();
-		cShell.configure();
+		cShell.configure(shell.getLocation());
 	}
 
 	/**
 	 * Create contents of the window.
 	 */
+	int foo = 0;
 	protected void createContents() {
-		cShell.configure("COM1",19200);
+		cShell.configure("COM9",19200);
 		shell = new Shell();
 		shell.setSize(450, 300);
 		shell.setText("SWT Application");
@@ -98,13 +92,12 @@ public class StartUp {
 			
 			@Override
 			public void widgetDisposed(DisposeEvent arg0) {
-				// TODO Auto-generated method stub
 				cShell.close();
 				cShell.dispose();
 			}
 		});
 		
-		Menu menu = new Menu(shell, SWT.BAR);
+		menu = new Menu(shell, SWT.BAR);
 		shell.setMenuBar(menu);
 		
 		MenuItem mntmNewSubmenu = new MenuItem(menu, SWT.CASCADE);
@@ -116,9 +109,8 @@ public class StartUp {
 		MenuItem mntmPortConfig = new MenuItem(menu_1, SWT.NONE);
 		mntmPortConfig.setText("Port Config");
 		
-		textReceive = new Text(shell, SWT.BORDER);
-		textReceive.setBounds(0, 27, 218, 205);
-		textReceive.setEnabled(false);
+		textReceive = new Text(shell, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		textReceive.setBounds(0, 27, 218, 192);
 		textSend = new Text(shell, SWT.BORDER);
 		textSend.setBounds(0, 0, 218, 21);
 		textSend.setText("310100000001FE7132");
@@ -139,12 +131,11 @@ public class StartUp {
 		Button btnByte_2 = new Button(grpEncode, SWT.RADIO);
 		btnByte_2.setText("ASCII");
 		btnByte_2.setBounds(10, 68, 50, 16);
+
 		textSend.addKeyListener(new KeyListener() {
 			
 			@Override
-			public void keyReleased(KeyEvent arg0) {
-				// TODO Auto-generated method stub
-				
+			public void keyReleased(KeyEvent arg0) {	
 			}
 			
 			@Override
@@ -152,36 +143,29 @@ public class StartUp {
 				if (arg0.keyCode == 13) {
 					logger.debug("confirmed text to send!");
 
-					String x = textReceive.getText();
-					byte[] byteArray2 = {0x31,0x01,0x00,0x00,0x00,0x01,(byte) 0xFE,0x71,0x32};
-					byte[] byteArray = new byte[byteArray2.length];
-					
-					int i = 0;
-					while(i < byteArray.length){
-						byteArray[i] = (byte) (byteArray2[i] & 0xff);
-						i++;
-					}
-					
-					cShell.write(byteArray);
-					//cShell.write(textSend.getText());
-					textReceive.setText(x  + "\n\r\n\r" + cShell.read(ComPort.ReturnType.STRING));
+					//String x = textReceive.getText();
+					byte[] byteArray = {0x31,0x01,0x00,0x00,0x00,0x01,(byte) 0xFE,0x71,(byte) foo};
+					foo++;
+
+					byte[] smartArray = {0x06,0x00,0x02,0x00,0x0D,0x0A};
+					cShell.write(smartArray);
+					textReceive.setRedraw(false);
+					String str = textReceive.getText();
+					textReceive.setText((String) cShell.read(ComPort.ReturnType.STRING) + "\n");
+					textReceive.append(str);
+					textReceive.setRedraw(true);
 				}
 			}
 		});
-				
+		
 		mntmPortConfig.addSelectionListener(new SelectionListener() {
-			
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 				createPopUps();
-				//cPort.openConfigWindow();
 			}
 			
 			@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
-				// TODO Auto-generated method stub
-				
 			}
 		});
 

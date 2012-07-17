@@ -45,9 +45,12 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.gdip.Rect;
 import org.eclipse.swt.widgets.Label;
 
 import com.sun.corba.se.impl.javax.rmi.CORBA.Util;
+import com.sun.xml.internal.bind.v2.runtime.Location;
+
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import sun.io.Converters;
@@ -81,7 +84,9 @@ public class ComPort {
 	Combo combo;
 	boolean shellExists = false;
 	static Label lblConnectionStatus;
-
+	private Point location;
+	
+	
 	public boolean isConnected() {
 		return this.connected;
 	}
@@ -110,39 +115,57 @@ public class ComPort {
 		return this.dataBits;
 	}
 
-	public void showConfigWindow(ArrayList<String> availableComPorts) {
-		if (availableComPorts != null) {
-			this.availableComPorts = availableComPorts;
-			Display display = Display.getDefault();
-			createContents();
+	public void showConfigWindow() {
 
-			shlPortConfig.open();
-			shlPortConfig.layout();
-			shellExists = true;
 
-			while (!shlPortConfig.isDisposed()) {
-				if (!display.readAndDispatch()) {
-					display.sleep();
+		if (!shellExists) {
+			ArrayList<String> availableComPorts = listPorts();
+
+			if (availableComPorts != null) {
+				this.availableComPorts = availableComPorts;
+				Display display = Display.getDefault();
+				createContents();
+
+				shlPortConfig.setRedraw(false);
+				shlPortConfig.open();
+				shlPortConfig.layout();
+				shlPortConfig.setLocation(location.x + 7, location.y + 29);
+				shlPortConfig.setVisible(true);
+				shlPortConfig.setRedraw(true);
+				shlPortConfig.redraw();
+
+				shellExists = true;
+
+				while (!shlPortConfig.isDisposed()) {
+					if (!display.readAndDispatch()) {
+						display.sleep();
+					}
 				}
-			}
 
-			logger.debug(JUtil.getMethodName(1) + " port list is passed");
+				logger.debug(JUtil.getMethodName(1) + " port list is passed");
+			} else {
+				logger.debug(JUtil.getMethodName(1) + " port list is null");
+			}
 		} else {
-			logger.debug(JUtil.getMethodName(1) + " port list is null");
+			shlPortConfig.setLocation(location.x + 7, location.y + 29);
+			//shlPortConfig.redraw();
+			shlPortConfig.setVisible(true);
 		}
+		shlPortConfig.setRedraw(true);
+		shlPortConfig.redraw();
 	}
 
 	/**
 	 * @wbp.parser.entryPoint
 	 */
 	private void createContents() {
-		shlPortConfig = new Shell(SWT.BORDER);
+		shlPortConfig = new Shell(SWT.ON_TOP);
 		shlPortConfig.setTouchEnabled(true);
 		shlPortConfig.setMinimumSize(new Point(100, 30));
 		shlPortConfig.setSize(364, 174);
 		shlPortConfig.setText("Port Config");
 		shlPortConfig.setLayout(new FormLayout());
-
+		//shlPortConfig.setf
 		//createRadioButtonGroups(shlPortConfig);
 		//createComboPortList(shlPortConfig);
 		createGUI();
@@ -398,11 +421,30 @@ public class ComPort {
 
 	public void configure() {
 		if (!shellExists)
-			showConfigWindow(listPorts());
+			showConfigWindow();
+		else {			
+			
+		}
+	}
+	
+	public void configure(Point location) {
+		//this.location.x = location.x;
+		//this.location.y = location.y;
+		this.location = location;
+		showConfigWindow();
+		/*
+		if (!shellExists){
+			showConfigWindow();
+		}
 		else {			
 			shlPortConfig.setVisible(true);
 		}
+		*/
+//		shlPortConfig.setLocation(location);
+//		shlPortConfig.redraw();
+
 	}
+	
 	public void configure(String string, int i) {
 		// TODO Auto-generated method stub
 		this.baudRate = i;
@@ -413,6 +455,7 @@ public class ComPort {
 			e.printStackTrace();
 		}
 	}
+	
 	protected void reConfigurePortSettings() {
 		try {
 			if (open(this.portName)) {
@@ -431,8 +474,8 @@ public class ComPort {
 	}
 
 	public void dispose() {
-		shlPortConfig.close();
-		shlPortConfig.dispose();
+		//shlPortConfig.close();
+		//shlPortConfig.dispose();
 	}
 
 	private ArrayList<String> listPorts() {
@@ -752,25 +795,12 @@ public class ComPort {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}   
-		
-		/*
-		byte[] byteArray = new byte[1];
-		byteArray[0] = message;
-		try {
-			outputStream.write(byteArray);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 	}	
 	
 	public void write(byte[] message) {
-
-		String hexStr = "02303033434333d3037313131303131323639393130333131303139033ff";
-		byte[] unsignedByte = convertHexToBytes(hexStr);
 		try {
-			serialPort.getOutputStream().write(unsignedByte);
+			//serialPort.getOutputStream().write(unsignedByte);
+			serialPort.getOutputStream().write(message);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -783,48 +813,21 @@ public class ComPort {
 		}   
 	}
 	
-
-
 	public enum ReturnType {
 	    BYTE, STRING, ASCII 
 	}
-
 	
 	public Object read(ReturnType returnType) {
-		Object returnValue = null;
-		byte[] buffer = new byte[0xff];
+		Object returnValue = "";
+		//byte[] buffer = new byte[0xff];
 		
 		try {
 			Thread.sleep(1000);
-			int input = serialPort.getInputStream().read(buffer);
-			logger.debug("hashCode of inputstream is: " + inputStream.hashCode());
-			logger.debug("input stream has number " + inputStream.available());
-			logger.debug(input);
-			/*for(byte s : buffer){
-				logger.debug(s);
+			while(inputStream.available() > 0){
+				int buffer = inputStream.read();
+				logger.debug(buffer);
+				returnValue = returnValue + " " + String.format("%h", buffer); 
 			}
-			*/
-			switch(returnType){
-			case BYTE:
-				returnValue = (Object) buffer;
-				for(byte s : buffer){
-					logger.debug(s);
-				}
-				break;
-			case STRING:				
-				String y = null;
-				for(byte s : buffer){
-					//y = y + ;
-				}
-				
-				returnValue = new String(buffer.toString());
-				logger.debug("returnValue is: " + returnValue);
-				break;
-			case ASCII:
-				logger.debug("returnValue in ASCII not implemented yet!");
-				break;
-			}
-
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -832,10 +835,6 @@ public class ComPort {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		return returnValue;
-		
+		return returnValue;	
 	}
-
-
 }
