@@ -84,7 +84,7 @@ public class StartUp {
 	 */
 	int foo = 0;
 	protected void createContents() {
-		cShell.configure("COM9",19200);
+		cShell.configure("COM5",57600);
 		shell = new Shell();
 		shell.setSize(450, 300);
 		shell.setText("SWT Application");
@@ -92,6 +92,7 @@ public class StartUp {
 			
 			@Override
 			public void widgetDisposed(DisposeEvent arg0) {
+				shell.setVisible(false);
 				cShell.close();
 				cShell.dispose();
 			}
@@ -144,11 +145,11 @@ public class StartUp {
 					logger.debug("confirmed text to send!");
 
 					//String x = textReceive.getText();
-					byte[] byteArray = {0x31,0x01,0x00,0x00,0x00,0x01,(byte) 0xFE,0x71,(byte) foo};
+					byte[] byteArray = {0x31,0x01,0x00,0x00,0x00,0x01,(byte) 0xFE,0x71,0x32};
 					foo++;
 
 					byte[] smartArray = {0x06,0x00,0x02,0x00,0x0D,0x0A};
-					cShell.write(smartArray);
+					cShell.write(byteArray);
 					textReceive.setRedraw(false);
 					String str = textReceive.getText();
 					textReceive.setText((String) cShell.read(ComPort.ReturnType.STRING) + "\n");

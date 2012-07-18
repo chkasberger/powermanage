@@ -474,6 +474,7 @@ public class ComPort {
 	}
 
 	public void dispose() {
+		
 		//shlPortConfig.close();
 		//shlPortConfig.dispose();
 	}
@@ -718,8 +719,9 @@ public class ComPort {
 	}
 
 	public void close() {
+		shlPortConfig.setVisible(false);
 		try {
-			Thread.sleep(2000);
+			Thread.sleep(500);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
