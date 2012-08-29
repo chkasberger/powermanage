@@ -1,6 +1,7 @@
 package DatacCllector;
 
 
+import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.RXTXPort;
@@ -8,6 +9,8 @@ import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import gnu.io.UnsupportedCommOperationException;
 
+import java.awt.Label;
+import java.awt.Point;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,8 +35,9 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.wb.swt.SWTResourceManager;
 */
+import org.eclipse.wb.swt.SWTResourceManager;
+
 public class ComPort {
 	//private static Logger logger = Logger.getRootLogger();
 	private Thread reader;
