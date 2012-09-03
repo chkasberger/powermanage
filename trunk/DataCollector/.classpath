@@ -11,5 +11,7 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="DataCollector/lib"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.eclipse.wb.swing_1.5.0.r37x201206051155.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/Tools/Java/eclipse-jee-indigo-SR2-win32/eclipse/plugins/org.apache.log4j_1.2.15.v201012070815.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
