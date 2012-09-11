@@ -1,4 +1,4 @@
-package DatacCllector;
+package DatacCollector;
 /**
  * 
  */
