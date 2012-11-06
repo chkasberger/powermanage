@@ -8,10 +8,7 @@ import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -140,7 +137,10 @@ public class ComPort{
 				try {
 					/** Configure the opened serial port */
 
-					portSettings(portName, baudRate, parity, dataBits, stopBits);
+					//portSettings(portName, baudRate, parity, dataBits, stopBits);
+
+					//serialPort.setRTS(true);
+					//serialPort.setDTR(true);
 
 					//serialPort.addEventListener(this);
 					//serialPort.notifyOnDataAvailable(true);
@@ -170,7 +170,78 @@ public class ComPort{
 		}
 	}
 
+	public void connect(Object portName) throws PortInUseException {
 
+		portSettings(portName, baudRate, parity, dataBits, stopBits);
+
+		Thread thisThread = Thread.currentThread();
+		thisThread.setPriority(2);
+
+		try {
+			if(serialPort!=null){
+				serialReader.interrupt();
+				serialWriter.interrupt();
+				serialPort.close();
+				logger.debug(serialPort.getName() + " is closed!");
+			}
+
+			//String SerialPortID = this.portName;
+			//System.setProperty("gnu.io.rxtx.SerialPorts", SerialPortID);
+
+			/** Identifies and opens the desired port */
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(this.portName);
+			CommPort commPort = portIdentifier.open(this.getClass().getName(), 1000);
+
+			if (commPort instanceof SerialPort )
+			{
+				serialPort = (SerialPort) commPort;
+				logger.debug(serialPort.getName() + " is open");
+
+				try {
+					/** Configure the opened serial port */
+
+					portSettings(portName, baudRate, parity, dataBits, stopBits);
+
+					serialPort.setRTS(true);
+					serialPort.setDTR(true);
+
+					//serialPort.addEventListener(this);
+					//serialPort.notifyOnDataAvailable(true);
+
+
+					/** configure accessibility to serial port in/out stream */
+					in = serialPort. getInputStream();
+					out = serialPort.getOutputStream();
+					serialReader = new SerialReader(in, "SerialReader");
+					serialWriter = new SerialWriter(out, "SerialWriter");
+
+					/** starts threads for read and write process */
+					serialReader.start();
+					//serialWriter.start();
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				System.out.println("Error: Only serial ports are handled by this example.");
+			}
+
+		} catch (NoSuchPortException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void close(Object portName){
+
+		if(serialPort!=null){
+			serialReader.interrupt();
+			serialWriter.interrupt();
+			serialPort.close();
+			logger.debug(serialPort.getName() + " is closed!");
+		}
+	}
 
 	/** Parses the port settings */
 	public void portSettings(Object portName, Object baudRate, Object parity, Object dataBits, Object stopBits) {
@@ -203,20 +274,19 @@ public class ComPort{
 		default: this.stopBits = SerialPort.STOPBITS_1;
 		}
 
-
 		try {
 			if(serialPort != null){
 				serialPort.setRTS(false);
 				serialPort.setDTR(false);
 				serialPort.setSerialPortParams(this.baudRate,this.dataBits,this.stopBits,this.parity);
 				serialPort.setRTS(true);
-				serialPort.setDTR(true);				logger.debug(serialPort.getName() + " is configured with: " + serialPort.getBaudRate() + " " + serialPort.getDataBits() + " " + serialPort.getStopBits() + " " + serialPort.getParity());
+				serialPort.setDTR(true);
+				logger.debug(serialPort.getName() + " is configured with: " + serialPort.getBaudRate() + " " + serialPort.getParity() + " " + serialPort.getDataBits() + " " + serialPort.getStopBits());
 			}
 		} catch (UnsupportedCommOperationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	/** Class for serial read process */
@@ -225,13 +295,23 @@ public class ComPort{
 		Thread thisThread;
 
 		InputStream in;
+		int hardwareType = 0;
 
 		public SerialReader ( InputStream in, String threadName )
 		{
 			super(threadName);
 			thisThread = SerialReader.currentThread();
+			thisThread.setPriority(1);
+			this.in = in;
+		}
+
+		public SerialReader ( InputStream in, String threadName, int hardwareType )
+		{
+			super(threadName);
+			thisThread = SerialReader.currentThread();
 			thisThread.setPriority(3);
 			this.in = in;
+			this.hardwareType = hardwareType;
 		}
 
 		@Override
@@ -241,7 +321,7 @@ public class ComPort{
 			int len = -1;
 			try
 			{
-				File file = new File("./java.log");
+
 				String frame = new String();
 				while (!this.isInterrupted())
 				{
@@ -255,52 +335,69 @@ public class ComPort{
 							frame += stringBuffer;
 						}
 
-						Pattern identificationMessagePattern = Pattern.compile("/[\\w]{3}[0-9a-iA-I].{16}\r\n");
-						Matcher identificationMessageMatcher = identificationMessagePattern.matcher(frame);
-
-						/** Filter identification message and fire ComPortEvent */
-						//if(frame.matches(identificationMessage))
-						if(identificationMessageMatcher.find())
+						// --> AMIS implementation
+						if(hardwareType == 0)
 						{
-							System.out.println("--| " + frame + ": strings are equal");
-							ComPortEvent foo = new ComPortEvent(frame);
-							fireComPortEvent(foo);
-							frame = new String();
-							//out.write(new byte[] {0x06, 0x30, 0x33, 0x30, 0x0d, 0x0a});
-							serialPort.getOutputStream().write(new byte[] {0x06, 0x30, 0x35, 0x30, 0x0d, 0x0a});
-							serialPort.getOutputStream().flush();
+							Pattern identificationMessagePattern = Pattern.compile("/[\\w]{3}[0-9a-iA-I].{16}\r\n");
+							Matcher identificationMessageMatcher = identificationMessagePattern.matcher(frame);
 
+							/** Filter identification message and fire ComPortEvent */
+							//if(frame.matches(identificationMessage))
+							if(identificationMessageMatcher.find())
+							{
+								//System.out.println("--| " + frame + ": strings are equal");
+								ComPortEvent foo = new ComPortEvent(frame);
+								fireComPortEvent(foo);
+								frame = new String();
+								//out.write(new byte[] {0x06, 0x30, 0x33, 0x30, 0x0d, 0x0a});
+								serialPort.getOutputStream().write(new byte[] {0x06, 0x30, 0x35, 0x30, 0x0d, 0x0a});
+								serialPort.getOutputStream().flush();
+
+							}
+
+							if(frame.contains("050\r\n")){
+								//System.out.print("--> " + frame);
+								ComPortEvent foo = new ComPortEvent(frame);
+								fireComPortEvent(foo);
+								frame = new String();
+								portSettings(portName, 9600, Parity.EVEN, DataBits.SEVEN, StopBits.ONE);
+							}
+
+							if(frame.endsWith("!\r\n")){
+								//System.out.println("--> " + frame);
+								ComPortEvent foo = new ComPortEvent(frame);
+								fireComPortEvent(foo);
+								frame = new String();
+
+							}
+
+							if(frame.endsWith(")\r\n")){
+								//System.out.print("--> " + frame);
+								ComPortEvent foo = new ComPortEvent(frame);
+								fireComPortEvent(foo);
+								frame = new String();
+							}
+
+							/*
+							File file = new File("./java.log");
+							FileOutputStream fileOutputStream = new FileOutputStream(file,true);
+							BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+
+							for (int i=0; i < stringBuffer.length(); i++){
+								bufferedOutputStream.write((byte)stringBuffer.charAt(i));
+							}
+							bufferedOutputStream.close();
+							 */
 						}
-
-						if(frame.contains("050\r\n")){
-							System.out.print("--> " + frame);
-							ComPortEvent foo = new ComPortEvent(frame);
-							fireComPortEvent(foo);
-							frame = new String();
-							portSettings(portName, 9600, Parity.EVEN, DataBits.SEVEN, StopBits.ONE);
+						// --> Froelling implementation
+						else if(hardwareType == 1)
+						{
+							//TODO: Froeling!
 						}
-
-						if(frame.endsWith("!\r\n")){
-							System.out.println("--> " + frame);
-							ComPortEvent foo = new ComPortEvent(frame);
-							fireComPortEvent(foo);
-							frame = new String();
+						else
+						{
+							System.out.println("unsupported hardware type!");
 						}
-
-						if(frame.endsWith(")\r\n")){
-							System.out.print("--> " + frame);
-							ComPortEvent foo = new ComPortEvent(frame);
-							fireComPortEvent(foo);
-							frame = new String();
-						}
-
-						FileOutputStream fileOutputStream = new FileOutputStream(file,true);
-						BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-
-						for (int i=0; i < stringBuffer.length(); i++){
-							bufferedOutputStream.write((byte)stringBuffer.charAt(i));
-						}
-						bufferedOutputStream.close();
 					}
 				}
 			}

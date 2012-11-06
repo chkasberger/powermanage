@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="public" author="true" classpath="../lib/RXTXcomm.jar;C:\Users\Kasberger.Christian\Tools\Java\eclipse-jee-indigo-SR2-win32\eclipse\plugins\org.eclipse.wb.swing_1.5.0.r37x201206051155.jar;C:\Users\Kasberger.Christian\Tools\Java\eclipse-jee-indigo-SR2-win32\eclipse\plugins\org.apache.log4j_1.2.15.v201012070815.jar" destdir="" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="DatacCollector.IEC61107,DatacCollector.IO,DatacCollector" source="1.7" sourcefiles="../src/References.java,../src/MainFrame.java" sourcepath="../src" splitindex="true" use="true" version="true"/>
+    </target>
+</project>

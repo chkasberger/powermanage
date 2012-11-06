@@ -42,6 +42,7 @@ public class startup {
 			@Override
 			public void run() {
 				try {
+					System.out.println(System.getProperty("java.library.path"));
 					startup window = new startup();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
