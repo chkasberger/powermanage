@@ -10,40 +10,20 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Timer;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.SimpleLayout;
 
+import DataCollector.Main.Hardware;
 import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
 import DataCollector.IO.ComPortEvent;
 import DataCollector.IO.ComPortEventListener;
 
-public class Main {
-	final static Logger logger = Logger.getRootLogger();
+public class D0 {
 
-	enum Hardware {AMIS, FROELING}
-	static MySQLAccess DB;
+	private static Logger logger = Logger.getRootLogger();
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-
-		Level logLevel = Level.DEBUG;
-		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
-		try {
-			SimpleLayout layout = new SimpleLayout();
-			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
-			logger.setLevel(logLevel);
-			logger.addAppender(consoleAppender);
-		} catch (Exception ex) {
-			logger.debug(ex + "@" + JUtil.getMethodName(1));
-		}
-
-		DB = new MySQLAccess();
-		//DB.Set();
+	public D0(String[] args, final MySQLAccess DB)
+	{
 
 		ComPort Port = new ComPort();
 		String[] singleOption;
@@ -60,7 +40,7 @@ public class Main {
 
 		if(portList.size() > 0)
 		{
-			if(args.length > 0)
+			if(args != null)
 			{
 				singleOption = args;
 				logger.debug("command line arguments found");
