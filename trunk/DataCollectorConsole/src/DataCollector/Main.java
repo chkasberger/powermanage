@@ -19,6 +19,7 @@ import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
 import DataCollector.IO.ComPortEvent;
 import DataCollector.IO.ComPortEventListener;
+import DataCollector.JSON.PV;
 
 public class Main {
 	final static Logger logger = Logger.getRootLogger();
@@ -41,6 +42,9 @@ public class Main {
 		} catch (Exception ex) {
 			logger.debug(ex + "@" + JUtil.getMethodName(1));
 		}
+
+		PV pv = new PV("http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System");
+		pv.start();
 
 		DB = new MySQLAccess();
 		//DB.Set();
