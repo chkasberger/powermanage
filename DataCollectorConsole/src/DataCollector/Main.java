@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -19,37 +22,65 @@ import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
 import DataCollector.IO.ComPortEvent;
 import DataCollector.IO.ComPortEventListener;
+import DataCollector.IO.ComPortTask;
 import DataCollector.JSON.PV;
+import DataCollector.JSON.PVEvent;
+import DataCollector.JSON.PVEventListener;
+
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalInput;
+import com.pi4j.io.gpio.PinPullResistance;
+import com.pi4j.io.gpio.RaspiPin;
+import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
+import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
 public class Main {
 	final static Logger logger = Logger.getRootLogger();
-
-	enum Hardware {AMIS, FROELING}
+	static Lock lock = new ReentrantLock();
 	static MySQLAccess DB;
+	final static Object[] DBData = new Object[]{"0","0","0","0","00:00:00","0000-00-00","0","0","0","0",0,0,0,0};
+	enum Hardware {AMIS, FROELING}
+	//static MySQLAccess DB;
+
+	static double ticksPerKWH = 800;	// see user manual of energy meter
+	static double offset = 1598.300;	// already consumed energy
+
+	static double totalEnergy = 0;
+	static final double powerFactor = (1000000 / ticksPerKWH) * 3600; // Wh between two D0 events
+	String logFile = "d0.log";
+	static long startTime = System.currentTimeMillis();// nanoTime();
+	static long stopTime = System.currentTimeMillis();// System.nanoTime();
+
+	static Object portName = 0;
+	static Object baudRate = 300;
+	static Object parityBit = ComPort.Parity.EVEN;
+	static Object dataBits = ComPort.DataBits.SEVEN;
+	static Object stopBits = ComPort.StopBits.ONE;
+	static Object interval = 60;
+	static Object hardwareType = Hardware.AMIS;
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
-		Level logLevel = Level.DEBUG;
-		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
-		try {
-			SimpleLayout layout = new SimpleLayout();
-			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
-			logger.setLevel(logLevel);
-			logger.addAppender(consoleAppender);
-		} catch (Exception ex) {
-			logger.debug(ex + "@" + JUtil.getMethodName(1));
+		setup();
+
+		if(parseArgs(args))
+		{
+			createTaskS0();
+			createTaskD0(portName, baudRate, parityBit, dataBits, stopBits, interval);
+			createTaskPV("http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System");
+			createTaskDB();
 		}
+		else{
+			System.out.println("No valid input found!");
+		}
+	}
 
-		PV pv = new PV("http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System");
-		pv.start();
-
-		DB = new MySQLAccess();
-		//DB.Set();
-
-		ComPort Port = new ComPort();
+	private static boolean parseArgs(String[] args) {
+		boolean valid = true;
 		String[] singleOption;
 		ArrayList<String> portList = ComPort.portList();
 		String[][] portListArray = new String[portList.size()][2];
@@ -89,15 +120,6 @@ public class Main {
 			//String[] singleOption = new String[]{"0"};
 			System.out.print("enter port + options:\r\n\t");
 
-			Object portName = 0;
-			Object baudRate = 300;
-			Object parityBit = ComPort.Parity.EVEN;
-			Object dataBits = ComPort.DataBits.SEVEN;
-			Object stopBits = ComPort.StopBits.ONE;
-			Object hardwareType = Hardware.AMIS;
-			Object interval = 60;
-
-			boolean valid = true;
 
 			for (String string : singleOption) {
 				logger.debug(string);
@@ -174,157 +196,263 @@ public class Main {
 					valid = false;
 				}
 			}
-
-			if(valid)
-			{
-				try {
-					//connect to serial port
-					Port.connect(portName, baudRate, parityBit, dataBits, stopBits);
-
-					//create timer schedule
-					Timer timer = new Timer();
-					long delay = (Integer)interval*1000;
-					timer.schedule(new Task(Port, portName, baudRate, parityBit, dataBits, stopBits), 0, delay);
-				} catch (PortInUseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				final Object[] DBData = new Object[]{"0","0","0","0","00:00:00","0000-00-00","0","0","0","0"};
-				Port.addComPortEventListener(new ComPortEventListener() {
-
-					@Override
-					public void comPortEventFired(ComPortEvent evt) {
-						// TODO Auto-generated method stub
-						File file =new File("AMISLOG.csv");
-
-						//if file doesnt exists, then create it
-						if(!file.exists()){
-							try {
-								file.createNewFile();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-
-						//true = append file
-						FileWriter fileWritter = null;
-						try {
-							fileWritter = new FileWriter(file.getName(),true);
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-						BufferedWriter bufferWritter = new BufferedWriter(fileWritter);
-
-						String str = evt.getSource().toString();
-						String data = "";
-						String rawData = "";
-						String sepperator = ";";
-						boolean writeToFile = true;
-						boolean writeToDB = false;
-
-						if(
-								str.contains("(")|
-								str.contains(")")|
-								str.contains("!\r\n"))
-						{
-							if(!str.contains("!\r\n"))
-								rawData = str.substring(str.indexOf("(") + 1, str.indexOf(")"));
-							else
-								rawData = str;
-
-							if(rawData.contains("*"))
-								data = rawData.substring(0, rawData.indexOf("*"));
-							else
-								data = rawData.trim();
-
-							if(str.contains("F.F("))
-							{
-								DBData[0] = data;
-							}
-							else if(str.contains("0.0.0("))
-							{
-								DBData[1] = data;
-							}
-							else if(str.contains("1.8.0("))
-							{
-								DBData[2] = data;
-							}
-							else if(str.contains("2.8.0("))
-							{
-								DBData[3] = data;
-							}
-							else if(str.contains("0.9.1("))
-							{
-								DBData[4] = data;
-							}
-							else if(str.contains("0.9.2("))
-							{
-								DBData[5] = data;
-							}
-							else if(str.contains("1.7.0("))
-							{
-								DBData[6] = data;
-							}
-							else if(str.contains("2.7.0("))
-							{
-								DBData[7] = data;
-							}
-							else if(str.contains("3.7.0("))
-							{
-								DBData[8] = data;
-							}
-							else if(str.contains("4.7.0("))
-							{
-								DBData[9] = data;
-							}
-							else if(str.startsWith("!\r\n"))
-							{
-								data = "";
-								sepperator = "\r\n";
-								System.out.print("\r\nfinished cycle\r\n");
-								writeToDB = true;
-							}
-							else
-							{
-								writeToFile = false;
-							}
-
-							if(writeToFile)
-							{
-								logger.debug(data);
-								try {
-									bufferWritter.write(data + sepperator);
-									bufferWritter.close();
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-							}
-
-							if(writeToDB)
-							{
-								logger.debug("try to send data to MySQLAccess CLASS");
-								DB.Set(DBData);
-								/*for (Object object : DBData) {
-									logger.debug("-->" + (String)object);
-								}
-								 */
-							}
-						}
-
-					}
-				});
-			}
-			else{
-				System.out.println("No valid input found!");
-			}
 		}
 		else
 		{
 			System.out.println("No valid serial port found!");
 		}
+
+		return valid;
+	}
+
+	private static void createTaskS0() {
+		// create gpio controller instance
+		GpioController gpio = GpioFactory.getInstance();
+
+		// provision gpio pin #00 as an input pin with its internal pull down resistor enabled
+		// (configure pin edge to both rising and falling to get notified for HIGH and LOW state
+		// changes)
+		GpioPinDigitalInput Counter = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00,             // PIN NUMBER
+				"D0",                   // PIN FRIENDLY NAME
+				PinPullResistance.PULL_DOWN); // PIN RESISTANCE
+		//Counter.addListener(new GpioEventListener());
+		Counter.addListener(new GpioPinListenerDigital() {
+
+			@Override
+			public void handleGpioPinDigitalStateChangeEvent(
+					GpioPinDigitalStateChangeEvent event) {
+
+
+				// display pin state on console
+				if(event.getState().toString().equals("HIGH"))
+				{
+					double deltaTime;
+					stopTime = System.currentTimeMillis();
+					deltaTime = stopTime - startTime;
+					double currentPower = powerFactor / deltaTime;
+
+					totalEnergy = totalEnergy + 1.250;
+
+					String log = (" --> "+ event.getPin() + " = " + event.getState() + ";\t" +
+							"time since last event: " + deltaTime + "ms;\t" +
+							"current power: " + currentPower + " W\t" +
+							"total energy: " + totalEnergy + "Wh");
+					System.out.println(log);
+
+					startTime = System.currentTimeMillis();
+				}
+			}
+		});
+	}
+
+	private static void createTaskD0(
+			Object portName,
+			Object baudRate,
+			Object parityBit,
+			Object dataBits,
+			Object stopBits,
+			Object interval) {
+		ComPort port = new ComPort();
+		try {
+			port.connect(portName, baudRate, parityBit, dataBits, stopBits);
+		} catch (PortInUseException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		//create timer schedule for D0 interface
+		Timer timer_AMIS = new Timer();
+		long delay_AMIS = 0;
+		long interval_AMIS = (Integer)interval*1000;
+		timer_AMIS.schedule(new ComPortTask(port, portName, baudRate, parityBit, dataBits, stopBits), delay_AMIS, interval_AMIS);
+
+		port.addComPortEventListener(new ComPortEventListener() {
+			Object[] AmisDbData = new Object[10];
+
+			@Override
+			public void comPortEventFired(ComPortEvent evt) {
+				// TODO Auto-generated method stub
+				File file =new File("AMISLOG.csv");
+
+				//if file doesnt exists, then create it
+				if(!file.exists()){
+					try {
+						file.createNewFile();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
+				//true = append file
+				FileWriter fileWritter = null;
+				try {
+					fileWritter = new FileWriter(file.getName(),true);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				BufferedWriter bufferWritter = new BufferedWriter(fileWritter);
+
+				String str = evt.getSource().toString();
+				String data = "";
+				String rawData = "";
+				String sepperator = ";";
+				boolean writeToFile = true;		//log data into file
+				if(
+						str.contains("(")|
+						str.contains(")")|
+						str.contains("!\r\n"))
+				{
+					if(!str.contains("!\r\n"))
+						rawData = str.substring(str.indexOf("(") + 1, str.indexOf(")"));
+					else
+						rawData = str;
+
+					if(rawData.contains("*"))
+						data = rawData.substring(0, rawData.indexOf("*"));
+					else
+						data = rawData.trim();
+
+					if(str.contains("F.F("))
+					{
+						AmisDbData[0] = data;
+					}
+					else if(str.contains("0.0.0("))
+					{
+						AmisDbData[1] = data;
+					}
+					else if(str.contains("1.8.0("))
+					{
+						AmisDbData[2] = data;
+					}
+					else if(str.contains("2.8.0("))
+					{
+						AmisDbData[3] = data;
+					}
+					else if(str.contains("0.9.1("))
+					{
+						AmisDbData[4] = data;
+					}
+					else if(str.contains("0.9.2("))
+					{
+						AmisDbData[5] = data;
+					}
+					else if(str.contains("1.7.0("))
+					{
+						AmisDbData[6] = data;
+					}
+					else if(str.contains("2.7.0("))
+					{
+						AmisDbData[7] = data;
+					}
+					else if(str.contains("3.7.0("))
+					{
+						AmisDbData[8] = data;
+					}
+					else if(str.contains("4.7.0("))
+					{
+						AmisDbData[9] = data;
+					}
+					else if(str.startsWith("!\r\n"))
+					{
+						data = "";
+						sepperator = "\r\n";
+						System.out.print("\r\nfinished cycle\r\n");
+						lock.lock();
+						for (int i = 0; i < AmisDbData.length; i++) {
+							DBData[i] = AmisDbData[i];
+						}
+						lock.unlock();
+					}
+					else
+					{
+						writeToFile = false;
+					}
+
+					if(writeToFile)
+					{
+						logger.debug(data);
+						try {
+							bufferWritter.write(data + sepperator);
+							bufferWritter.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		});
+
+	}
+
+	private static void createTaskPV(String host) {
+		final PV pv = new PV(host);
+		//final PV pv = new PV("http://wilma-pt2-24.fronius.com/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System");
+		//pv.start();
+
+		//create timer schedule for JSON interface
+		Timer timer_PV = new Timer();
+		//long delay_PV = (Integer)interval*1000;
+		long delay_PV = 0;
+		long interval_PV = 60*1000;
+		//timer_PV.schedule(new PVTask(pv), delay_PV, interval_PV);
+		timer_PV.schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				pv.readValues();
+
+			}
+		}, delay_PV, interval_PV);
+
+		pv.addPVEventListener(new PVEventListener() {
+
+			@Override
+			public void PVEventFired(PVEvent evt) {
+				// TODO Auto-generated method stub
+				logger.debug("got PV Event!");
+				int[] tmpIntArray = (int[])evt.getSource();
+				lock.lock();
+				for (int i = 0; i < tmpIntArray.length; i++) {
+					DBData[i+10] = tmpIntArray[i];
+					System.out.print(DBData[i + 10].toString() + "\r\n");
+				}
+				lock.unlock();
+			}
+		});
+	}
+
+	private static void createTaskDB() {
+		//create timer schedule for DB access
+		Timer timer_DB = new Timer();
+		//long delay_PV = (Integer)interval*1000;
+		long delay_DB = 60*1000;
+		long interval_DB = 60*1000;
+		//timer_DB.schedule(new Task(DBData), 10000, delay_DB);
+		timer_DB.schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				lock.lock();
+				DB.Set(DBData);
+				lock.unlock();
+			}
+		}, delay_DB, interval_DB);
+	}
+
+	private static void setup() {
+		Level logLevel = Level.DEBUG;
+		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
+		try {
+			SimpleLayout layout = new SimpleLayout();
+			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+			logger.setLevel(logLevel);
+			logger.addAppender(consoleAppender);
+		} catch (Exception ex) {
+			logger.debug(ex + "@" + JUtil.getMethodName(1));
+		}
+		DB = new MySQLAccess();
 	}
 }

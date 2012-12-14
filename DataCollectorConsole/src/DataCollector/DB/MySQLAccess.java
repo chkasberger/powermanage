@@ -21,7 +21,7 @@ public class MySQLAccess {
 	private ResultSet resultSet = null;
 	private final String hostName = "localhost";
 	private final String dataBase = "logdata";
-	private final String dataBaseTable = "logdata.amis";
+	private final String dataBaseTable = "logdata.jamis";
 	//private final String dataTable = "amis";
 
 	public MySQLAccess()
@@ -44,7 +44,7 @@ public class MySQLAccess {
 					+ "user=DataCollector&password=collect");
 			logger.debug("connected to MYSQL DB.TABLE: " + dataBaseTable);
 
-			preparedStatementSet = connect.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)");
+			preparedStatementSet = connect.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			logger.debug(Double.parseDouble((String) data[0]));		//Fehler;						F.F;	99999999;	Zählerereignisse
 			logger.debug(Double.parseDouble((String) data[1]));		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
@@ -56,6 +56,10 @@ public class MySQLAccess {
 			logger.debug(Double.parseDouble((String) data[7]));		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
 			logger.debug(Double.parseDouble((String) data[8]));		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
 			logger.debug(Double.parseDouble((String) data[9]));		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
+			logger.debug(data[10]);		//momentane AC Power der PV-Anlage
+			logger.debug(data[11]);		//produzierte Gesamtenergie der PV-Anlage
+			logger.debug(data[12]);		//produzierte Jahresenergie der PV-Anlage
+			logger.debug(data[13]);		//produzierte Tagesenergie der PV-Anlage
 
 			preparedStatementSet.setDouble(1, Double.parseDouble((String) data[0]));		//Fehler;						F.F;	99999999;	Zählerereignisse
 			preparedStatementSet.setDouble(2, Double.parseDouble((String) data[1]));		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
@@ -67,6 +71,10 @@ public class MySQLAccess {
 			preparedStatementSet.setDouble(8, Double.parseDouble((String) data[7]));		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
 			preparedStatementSet.setDouble(9, Double.parseDouble((String) data[8]));		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
 			preparedStatementSet.setDouble(10,Double.parseDouble((String) data[9]));		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
+			preparedStatementSet.setDouble(11,((int) data[10]));		//momentane AC Power der PV-Anlage
+			preparedStatementSet.setDouble(12,((int) data[11]));		//produzierte Gesamtenergie der PV-Anlage
+			preparedStatementSet.setDouble(13,((int) data[12]));		//produzierte Jahresenergie der PV-Anlage
+			preparedStatementSet.setDouble(14,((int) data[13]));		//produzierte Tagesenergie der PV-Anlage
 
 
 			preparedStatementSet.executeUpdate();
