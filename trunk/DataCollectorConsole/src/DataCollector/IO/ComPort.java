@@ -409,7 +409,7 @@ public class ComPort{
 			thisThread = null;
 		}
 	}
-
+	/*
 	/** Class for serial write process */
 	public class SerialWriter extends Thread //implements Runnable
 	{
@@ -442,9 +442,6 @@ public class ComPort{
 			thisThread = null;
 		}
 	}
-
-
-
 }
 
 

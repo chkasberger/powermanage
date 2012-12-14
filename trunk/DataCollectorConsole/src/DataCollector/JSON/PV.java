@@ -1,8 +1,6 @@
 package DataCollector.JSON;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -11,6 +9,8 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.Iterator;
 
+import javax.swing.event.EventListenerList;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -18,60 +18,61 @@ import org.json.JSONTokener;
 //import com.sun.jmx.snmp.Enumerated;
 
 
-public class PV extends Thread{
+public class PV{
 	static Socket socket;
 	static BufferedReader in;
 	static PrintWriter out;
-	static String url;
+	//static String url;
+	URL url;
 
 	public PV(String str) {
-		super();
-		url = str;
-	}
-	public void run2() {
-
-		try {
-
-			sleep((int)(Math.random() * 1000));
-		} catch (InterruptedException e) {
-
-		}
-	}
-
-	@Override
-	public void run()
-	{
-		Thread currentThread = Thread.currentThread();
-
-		URL url = null;
-
 		try {
 			//url = new URL("http://wilma-pt2-12/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System");
 			//url = new URL("http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System");
-			url = new URL(this.url);
+			url = new URL(str);
 
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		InputStream in;
+	}
 
-		while(!currentThread.isInterrupted()){
-			try {
-				in = url.openStream();
-				BufferedInputStream bIn = new BufferedInputStream(in);
-				javaJsonLib(bIn);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			try {
-				currentThread.sleep(3000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+	/**
+	 * @description create listener components
+	 */
+	protected static EventListenerList listenerList = new EventListenerList();
+	public void addPVEventListener(PVEventListener listener){
+		listenerList.add(PVEventListener.class, listener);
+	}
+	public void removePVEventListener(PVEventListener listener){
+		listenerList.remove(PVEventListener.class, listener);
+	}
+	static void firePVEvent(PVEvent evt){
+		Object[] listeners = listenerList.getListenerList();
+		for(int i=0; i<listeners.length; i+=2){
+			if(listeners[i]==PVEventListener.class){
+				((PVEventListener)listeners[i+1]).PVEventFired(evt);
 			}
 		}
+	}
+
+	public void readValues()
+	{
+		//Thread currentThread = Thread.currentThread();
+
+		InputStream in;
+
+		//while(!currentThread.isInterrupted()){
+		try {
+			in = url.openStream();
+			BufferedInputStream bIn = new BufferedInputStream(in);
+			javaJsonLib(bIn);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//}
 	}
 
 	private void javaJsonLib(BufferedInputStream bIn) {
@@ -81,6 +82,7 @@ public class PV extends Thread{
 		JSONObject DAY_ENERGY = null;
 		JSONObject YEAR_ENERGY = null;
 		JSONObject PAC = null;
+		int[] values = new int[]{0,0,0,0};
 		try {
 			jTok = new JSONTokener(bIn);
 			jObj = new JSONObject(jTok).getJSONObject("Body").getJSONObject("Data");
@@ -91,17 +93,19 @@ public class PV extends Thread{
 			YEAR_ENERGY = jObj.getJSONObject("YEAR_ENERGY");
 			DAY_ENERGY = jObj.getJSONObject("DAY_ENERGY");
 
-			printValues(PAC, "PAC");
-			printValues(TOTAL_ENERGY, "TOTAL_ENERGY");
-			printValues(YEAR_ENERGY, "YEAR_ENERGY");
-			printValues(DAY_ENERGY, "DAY_ENERGY");
+			values[0] = printValues(PAC, "PAC");
+			values[1] = printValues(TOTAL_ENERGY, "TOTAL_ENERGY");
+			values[2] = printValues(YEAR_ENERGY, "YEAR_ENERGY");
+			values[3] = printValues(DAY_ENERGY, "DAY_ENERGY");
 			System.out.println();
+			PVEvent pvEventValues = new PVEvent(values);
+			firePVEvent(pvEventValues);
 
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}
-	private void javaJsonLib() {
+	/*	private void javaJsonLib() {
 		org.json.JSONTokener jTok = null;
 		JSONObject jObj = null;
 		JSONObject TOTAL_ENERGY = null;
@@ -138,7 +142,8 @@ public class PV extends Thread{
 			e.printStackTrace();
 		}
 	}
-	private void printValues(JSONObject refObj, String name) {
+	 */
+	private int printValues(JSONObject refObj, String name) {
 		JSONObject Values = null;
 		Object unit = null;
 		Iterator<?> vKey = null;
@@ -166,7 +171,8 @@ public class PV extends Thread{
 			}
 		}
 		System.out.print("\r\n\t\t" + "ALL" + "\t" + allValues + "\t" + unit);
-		allValues = 0;
+
+		return allValues;
 		//System.out.println();
 	}
 }

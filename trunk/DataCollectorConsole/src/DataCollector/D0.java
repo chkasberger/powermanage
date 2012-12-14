@@ -17,6 +17,7 @@ import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
 import DataCollector.IO.ComPortEvent;
 import DataCollector.IO.ComPortEventListener;
+import DataCollector.IO.ComPortTask;
 
 public class D0 {
 
@@ -160,7 +161,7 @@ public class D0 {
 					//create timer schedule
 					Timer timer = new Timer();
 					long delay = (Integer)interval*1000;
-					timer.schedule(new Task(Port, portName, baudRate, parityBit, dataBits, stopBits), 0, delay);
+					timer.schedule(new ComPortTask(Port, portName, baudRate, parityBit, dataBits, stopBits), 0, delay);
 				} catch (PortInUseException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
