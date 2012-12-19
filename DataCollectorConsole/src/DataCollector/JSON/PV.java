@@ -44,9 +44,11 @@ public class PV{
 	public void addPVEventListener(PVEventListener listener){
 		listenerList.add(PVEventListener.class, listener);
 	}
+
 	public void removePVEventListener(PVEventListener listener){
 		listenerList.remove(PVEventListener.class, listener);
 	}
+
 	static void firePVEvent(PVEvent evt){
 		Object[] listeners = listenerList.getListenerList();
 		for(int i=0; i<listeners.length; i+=2){
@@ -58,11 +60,9 @@ public class PV{
 
 	public void readValues()
 	{
-		//Thread currentThread = Thread.currentThread();
 
 		InputStream in;
 
-		//while(!currentThread.isInterrupted()){
 		try {
 			in = url.openStream();
 			BufferedInputStream bIn = new BufferedInputStream(in);
@@ -71,8 +71,6 @@ public class PV{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		//}
 	}
 
 	private void javaJsonLib(BufferedInputStream bIn) {
@@ -82,7 +80,7 @@ public class PV{
 		JSONObject DAY_ENERGY = null;
 		JSONObject YEAR_ENERGY = null;
 		JSONObject PAC = null;
-		int[] values = new int[]{0,0,0,0};
+		double[] values = new double[]{0.0,0.0,0.0,0.0};
 		try {
 			jTok = new JSONTokener(bIn);
 			jObj = new JSONObject(jTok).getJSONObject("Body").getJSONObject("Data");
@@ -93,10 +91,10 @@ public class PV{
 			YEAR_ENERGY = jObj.getJSONObject("YEAR_ENERGY");
 			DAY_ENERGY = jObj.getJSONObject("DAY_ENERGY");
 
-			values[0] = printValues(PAC, "PAC");
-			values[1] = printValues(TOTAL_ENERGY, "TOTAL_ENERGY");
-			values[2] = printValues(YEAR_ENERGY, "YEAR_ENERGY");
-			values[3] = printValues(DAY_ENERGY, "DAY_ENERGY");
+			values[0] = getValues(PAC, "PAC");
+			values[1] = getValues(TOTAL_ENERGY, "TOTAL_ENERGY");
+			values[2] = getValues(YEAR_ENERGY, "YEAR_ENERGY");
+			values[3] = getValues(DAY_ENERGY, "DAY_ENERGY");
 			System.out.println();
 			PVEvent pvEventValues = new PVEvent(values);
 			firePVEvent(pvEventValues);
@@ -105,45 +103,8 @@ public class PV{
 			e.printStackTrace();
 		}
 	}
-	/*	private void javaJsonLib() {
-		org.json.JSONTokener jTok = null;
-		JSONObject jObj = null;
-		JSONObject TOTAL_ENERGY = null;
-		JSONObject DAY_ENERGY = null;
-		JSONObject YEAR_ENERGY = null;
-		JSONObject PAC = null;
-		try {
-			byte[] buffer = new byte[1024];
-			FileInputStream f = new FileInputStream("testplans.txt");
-			f.read(buffer);
 
-			jTok = new JSONTokener(new String(buffer));
-			jObj = new JSONObject(jTok).getJSONObject("Body").getJSONObject("Data");
-			System.out.println("current keys: " + jObj.names());
-
-
-			PAC = jObj.getJSONObject("PAC");
-			TOTAL_ENERGY = jObj.getJSONObject("TOTAL_ENERGY");
-			YEAR_ENERGY = jObj.getJSONObject("YEAR_ENERGY");
-			DAY_ENERGY = jObj.getJSONObject("DAY_ENERGY");
-
-			printValues(PAC, "PAC");
-			printValues(TOTAL_ENERGY, "TOTAL_ENERGY");
-			printValues(YEAR_ENERGY, "YEAR_ENERGY");
-			printValues(DAY_ENERGY, "DAY_ENERGY");
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	 */
-	private int printValues(JSONObject refObj, String name) {
+	private double getValues(JSONObject refObj, String name) {
 		JSONObject Values = null;
 		Object unit = null;
 		Iterator<?> vKey = null;
@@ -157,10 +118,10 @@ public class PV{
 		}
 
 		//System.out.print(vKey + "\r\n\t" + name + ":");
-		int allValues = 0;
+		double allValues = 0;
 		while(vKey.hasNext()) {
 
-			int value;
+			double value;
 			Object element = vKey.next();
 			try {
 				value = Values.getInt(element.toString());
@@ -170,9 +131,14 @@ public class PV{
 				e.printStackTrace();
 			}
 		}
-		System.out.print("\r\n\t\t" + "ALL" + "\t" + allValues + "\t" + unit);
+		//System.out.print("\r\n\t\t" + "ALL" + "\t" + allValues + "\t" + unit);
 
-		return allValues;
+		double foo = Math.round(allValues);
+		System.out.print("\r\n\t\t" + "ALL" + "\t" + foo / 1000 + "\t" + unit);
+		//System.out.print("\r\n\t\t" + "ALL" + "\t" + foo/1000 + "\t" + unit);
+
+
+		return foo / 1000;
 		//System.out.println();
 	}
 }

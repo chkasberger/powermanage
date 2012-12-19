@@ -14,14 +14,14 @@ import org.apache.log4j.Logger;
 public class MySQLAccess {
 	private static Logger logger = Logger.getRootLogger();
 
-	private Connection connect = null;
+	private Connection dbConnection = null;
 	private Statement statement = null;
 	private PreparedStatement preparedStatement = null;
 	private PreparedStatement preparedStatementSet = null;
 	private ResultSet resultSet = null;
 	private final String hostName = "localhost";
 	private final String dataBase = "logdata";
-	private final String dataBaseTable = "logdata.jamis";
+	private final String dataBaseTable = "logdata.xamis";
 	//private final String dataTable = "amis";
 
 	public MySQLAccess()
@@ -30,135 +30,92 @@ public class MySQLAccess {
 			Class.forName("com.mysql.jdbc.Driver");
 
 		} catch (ClassNotFoundException e) {
-			logger.error(e.toString());
+			logger.error(e.getMessage());
 		}
 	}
 
 	public void Set(Object[] data)
 	{
-
-
 		logger.debug("try to write data to: " + dataBaseTable);
 		try {
-			connect = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
+			dbConnection = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
 					+ "user=DataCollector&password=collect");
 			logger.debug("connected to MYSQL DB.TABLE: " + dataBaseTable);
 
-			preparedStatementSet = connect.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-			logger.debug(Double.parseDouble((String) data[0]));		//Fehler;						F.F;	99999999;	Zählerereignisse
-			logger.debug(Double.parseDouble((String) data[1]));		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
-			logger.debug(Double.parseDouble((String) data[2]));		//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
-			logger.debug(Double.parseDouble((String) data[3]));		//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
-			logger.debug(Time.valueOf((String)data[4]));					//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
-			logger.debug(Date.valueOf("20" + (String)data[5]));					//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
-			logger.debug(Double.parseDouble((String) data[6]));		//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
-			logger.debug(Double.parseDouble((String) data[7]));		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
-			logger.debug(Double.parseDouble((String) data[8]));		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
-			logger.debug(Double.parseDouble((String) data[9]));		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
-			logger.debug(data[10]);		//momentane AC Power der PV-Anlage
-			logger.debug(data[11]);		//produzierte Gesamtenergie der PV-Anlage
-			logger.debug(data[12]);		//produzierte Jahresenergie der PV-Anlage
-			logger.debug(data[13]);		//produzierte Tagesenergie der PV-Anlage
-
-			preparedStatementSet.setDouble(1, Double.parseDouble((String) data[0]));		//Fehler;						F.F;	99999999;	Zählerereignisse
-			preparedStatementSet.setDouble(2, Double.parseDouble((String) data[1]));		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
-			preparedStatementSet.setDouble(3, Double.parseDouble((String) data[2]));		//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
-			preparedStatementSet.setDouble(4, Double.parseDouble((String) data[3]));		//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
-			preparedStatementSet.setTime(5, Time.valueOf((String)data[4]));					//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
-			preparedStatementSet.setDate(6, Date.valueOf("20" + (String)data[5]));					//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
-			preparedStatementSet.setDouble(7, Double.parseDouble((String) data[6]));		//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
-			preparedStatementSet.setDouble(8, Double.parseDouble((String) data[7]));		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
-			preparedStatementSet.setDouble(9, Double.parseDouble((String) data[8]));		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
-			preparedStatementSet.setDouble(10,Double.parseDouble((String) data[9]));		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
-			preparedStatementSet.setDouble(11,((int) data[10]));		//momentane AC Power der PV-Anlage
-			preparedStatementSet.setDouble(12,((int) data[11]));		//produzierte Gesamtenergie der PV-Anlage
-			preparedStatementSet.setDouble(13,((int) data[12]));		//produzierte Jahresenergie der PV-Anlage
-			preparedStatementSet.setDouble(14,((int) data[13]));		//produzierte Tagesenergie der PV-Anlage
-
-
+			preparedStatementSet = prepareStatementSet(data);
 			preparedStatementSet.executeUpdate();
 			logger.debug("executed SQL write command");
+
+			preparedStatementSet.close();
+			logger.debug("closed prepared statement set");
+
 		} catch (SQLException e) {
-			//logger.error(e.toString());
-			e.printStackTrace();
+			logger.error(e.toString());
+			//e.printStackTrace();
 		}
 		finally
 		{
 			close();
+
 		}
 	}
 
-	public void Set()
-	{
-		//this.data = data;
-		Object[] data = new Object[10];
-		data[0] = "0000000";
-		data[1] = "003030396";
-		data[2] = "984.138";
-		data[3] = "2544.458";
-		data[4] = "14:07:29";
-		data[5] = "12-11-05";
-		data[6] = "0.000";
-		data[7] = "0.330";
-		data[8] = "0.000";
-		data[9] = "0.288";
+	private PreparedStatement prepareStatementSet(Object[] data) {
+		logger.debug("DB values: "
+				+ (Time.valueOf((String)data[0]) 			+ "\t\tcurrent time D0 interface\r\n")	//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
+				+ (Date.valueOf("20" + (String)data[1])	+ "\t\tcurrent date D0 interface\r\n")	//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
+				+ (data[2] 	+ "\t\terror counter D0 interface\r\n")	//Fehler;						F.F;	99999999;	Zählerereignisse
+				+ (data[3] 	+ "\t\tserial number D0 interface\r\n")	//Serialnummer;					0.0.0;	999999999;			In Zähler laden
+				+ (data[4] 	+ "\t\tconsumed energy D0 interface\r\n")	//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
+				+ (data[5] 	+ "\t\tsupplied energy D0 interface\r\n")	//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
+				+ (data[6]	+ "\t\tcurrent consumed effective power D0 interface\r\n")	//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
+				+ (data[7]	+ "\t\tcurrent supplied effective power D0 interface\r\n")	//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
+				+ (data[8]	+ "\t\tcurrent consumed reactive power D0 interface\r\n")	//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
+				+ (data[9]	+ "\t\tcurrent supplied reactive power D0 interface\r\n")	//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
+				+ (data[10]	+ "\t\tcurrent produced power JSON interface\r\n")	//momentane AC Power der PV-Anlage
+				+ (data[11]	+ "\t\tcurrent produced total energy JSON interface\r\n")	//produzierte Gesamtenergie der PV-Anlage
+				+ (data[12]	+ "\t\tcurrent produced year energy JSON interface\r\n")	//produzierte Jahresenergie der PV-Anlage
+				+ (data[13]	+ "\t\tcurrent produced day energy JSON interface\r\n")	//produzierte Tagesenergie der PV-Anlage
+				+ (data[14]	+ "\t\tcurrent consumed power S0 interface\r\n")		//produzierte Tagesenergie der PV-Anlage
+				+ (data[15]	+ "\t\tcurrent consumed energy S0 interface"));		//produzierte Tagesenergie der PV-Anlage
 
-		logger.debug("try to write data to: " + dataBaseTable);
+		PreparedStatement pss = null;
 		try {
-			connect = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
-					+ "user=DataCollector&password=collect");
-			logger.debug("connected to MYSQL DB.TABLE: " + dataBaseTable);
-
-			preparedStatementSet = connect.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)");
-
-			logger.debug(Double.parseDouble((String) data[0]));		//Fehler;						F.F;	99999999;	Zählerereignisse
-			logger.debug(Double.parseDouble((String) data[1]));		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
-			logger.debug(Double.parseDouble((String) data[2]));		//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
-			logger.debug(Double.parseDouble((String) data[3]));		//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
-			logger.debug(Time.valueOf((String)data[4]));					//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
-			logger.debug(Date.valueOf("20" + (String)data[5]));					//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
-			logger.debug(Double.parseDouble((String) data[6]));		//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
-			logger.debug(Double.parseDouble((String) data[7]));		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
-			logger.debug(Double.parseDouble((String) data[8]));		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
-			logger.debug(Double.parseDouble((String) data[9]));		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
-
-			preparedStatementSet.setDouble(1, Double.parseDouble((String) data[0]));		//Fehler;						F.F;	99999999;	Zählerereignisse
-			preparedStatementSet.setDouble(2, Double.parseDouble((String) data[1]));		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
-			preparedStatementSet.setDouble(3, Double.parseDouble((String) data[2]));		//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
-			preparedStatementSet.setDouble(4, Double.parseDouble((String) data[3]));		//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
-			preparedStatementSet.setTime(5, Time.valueOf((String)data[4]));					//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
-			preparedStatementSet.setDate(6, Date.valueOf("20" + (String)data[5]));					//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
-			preparedStatementSet.setDouble(7, Double.parseDouble((String) data[6]));		//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
-			preparedStatementSet.setDouble(8, Double.parseDouble((String) data[7]));		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
-			preparedStatementSet.setDouble(9, Double.parseDouble((String) data[8]));		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
-			preparedStatementSet.setDouble(10,Double.parseDouble((String) data[9]));		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
-
-
-			preparedStatementSet.executeUpdate();
-			logger.debug("executed SQL write command");
+			pss = dbConnection.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			pss.setTime(1, Time.valueOf((String)data[0]));					//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
+			pss.setDate(2, Date.valueOf("20" + (String)data[1]));					//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
+			pss.setDouble(3, (double) data[2]);		//Fehler;						F.F;	99999999;	Zählerereignisse
+			pss.setDouble(4, (double) data[3]);		//Serialnummer;					0.0.0;	999999999;			In Zähler laden
+			pss.setDouble(5, (double) data[4]);		//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
+			pss.setDouble(6, (double) data[5]);		//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
+			pss.setDouble(7, (double) data[6]);		//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
+			pss.setDouble(8, (double) data[7]);		//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
+			pss.setDouble(9, (double) data[8]);		//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
+			pss.setDouble(10,(double) data[9]);		//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
+			pss.setDouble(11,(double) data[10]);		//momentane AC Power der PV-Anlage
+			pss.setDouble(12,(double) data[11]);		//produzierte Gesamtenergie der PV-Anlage
+			pss.setDouble(13,(double) data[12]);		//produzierte Jahresenergie der PV-Anlage
+			pss.setDouble(14,(double) data[13]);		//produzierte Tagesenergie der PV-Anlage
+			pss.setDouble(15,(double) data[14]);		//produzierte Tagesenergie der PV-Anlage
+			pss.setDouble(16,(double) data[15]);		//produzierte Tagesenergie der PV-Anlage
 		} catch (SQLException e) {
-			//logger.error(e.toString());
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
-		finally
-		{
-			close();
-		}
+		return pss;
 	}
 
 	public void readDataBase() throws Exception {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			connect = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
+			dbConnection = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
 					+ "user=DataCollector&password=collect");
 
-			statement = connect.createStatement();	// Statements allow to issue SQL queries to the database
+			statement = dbConnection.createStatement();	// Statements allow to issue SQL queries to the database
 			resultSet = statement.executeQuery("SELECT * FROM " + dataBaseTable);	// Result set get the result of the SQL query
 			writeResultSet(resultSet);
 
 			// PreparedStatements can use variables and are more efficient
-			preparedStatement = connect.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)");
+			preparedStatement = dbConnection.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)");
 			// "myuser, webpage, datum, summery, COMMENTS from FEEDBACK.COMMENTS");
 			// Parameters start with 1
 			preparedStatement.setString(1, "Test");
@@ -169,12 +126,12 @@ public class MySQLAccess {
 			preparedStatement.setString(6, "TestComment");
 			preparedStatement.executeUpdate();
 
-			preparedStatement = connect.prepareStatement("SELECT myuser, webpage, datum, summery, COMMENTS from FEEDBACK.COMMENTS");
+			preparedStatement = dbConnection.prepareStatement("SELECT myuser, webpage, datum, summery, COMMENTS from FEEDBACK.COMMENTS");
 			resultSet = preparedStatement.executeQuery();
 			writeResultSet(resultSet);
 
 			// Remove again the insert comment
-			preparedStatement = connect.prepareStatement("delete from FEEDBACK.COMMENTS where myuser= ? ; ");
+			preparedStatement = dbConnection.prepareStatement("delete from FEEDBACK.COMMENTS where myuser= ? ; ");
 			preparedStatement.setString(1, "Test");
 			preparedStatement.executeUpdate();
 
@@ -226,17 +183,25 @@ public class MySQLAccess {
 		try {
 			if (resultSet != null) {
 				resultSet.close();
+				logger.debug("closed result set");
 			}
 
 			if (statement != null) {
 				statement.close();
+				logger.debug("closed statement");
 			}
 
-			if (connect != null) {
-				connect.close();
+			if (preparedStatementSet != null) {
+				preparedStatementSet.close();
+				logger.debug("closed prepared statement set");
+			}
+
+			if (dbConnection != null) {
+				dbConnection.close();
+				logger.debug("closed SQL connection");
 			}
 		} catch (Exception e) {
-
+			logger.error(e.getMessage());
 		}
 	}
 
