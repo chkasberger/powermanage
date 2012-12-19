@@ -22,6 +22,7 @@ import DataCollector.IO.ComPortEventListener;
 import DataCollector.JSON.PV;
 import DataCollector.JSON.PVEvent;
 import DataCollector.JSON.PVEventListener;
+import DataCollector.XML.XmlConfigParser;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
@@ -63,8 +64,12 @@ public class Main {
 
 		setup();
 
-		if(parseArgs(args))
-		{
+		logger.debug("here I'am!");
+		XmlConfigParser dpe = new XmlConfigParser();
+		dpe.parseFile("./cfg/config.xml");
+
+		/*
+		if(parseArgs(args)){
 			Thread S0Thread = new Thread(){
 				@Override
 				public void run(){
@@ -94,9 +99,23 @@ public class Main {
 			D0Thread.start();
 			PVThread.start();
 			DBThread.start();
-		}
-		else{
-			System.out.println("No valid input found!");
+			}
+			else{
+				logger.error("No valid input found!");
+			}
+		 */
+	}
+
+	private static void setup() {
+		Level logLevel = Level.DEBUG;
+		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
+		try {
+			SimpleLayout layout = new SimpleLayout();
+			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+			logger.setLevel(logLevel);
+			logger.addAppender(consoleAppender);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
 	}
 
@@ -469,18 +488,5 @@ public class Main {
 				lock.unlock();
 			}
 		}, delay_DB, interval_DB);
-	}
-
-	private static void setup() {
-		Level logLevel = Level.DEBUG;
-		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
-		try {
-			SimpleLayout layout = new SimpleLayout();
-			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
-			logger.setLevel(logLevel);
-			logger.addAppender(consoleAppender);
-		} catch (Exception ex) {
-			logger.debug(ex + "@" + JUtil.getMethodName(1));
-		}
 	}
 }
