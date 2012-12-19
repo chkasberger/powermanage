@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<config>
+    <PvUrl>http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System</PvUrl>
+    <d0>
+		<port>/dev/ttyUSB</port>
+		<baudRate>300</baudRate>
+		<parity>2</parity>
+		<dataBits>7</dataBits>
+		<stopBits>1</stopBits>
+		<interval>60</interval>
+	</d0>
+    <s0>
+		<ticksPerKwh>800</ticksPerKwh>
+		<offset>1555.6</offset>
+	</s0>
+    <db>
+		<name>logdata</name>
+		<table>xamis</table>
+	</db>
+</config>
