@@ -1,6 +1,6 @@
-Registerbeschreibung;		OBISKennung;	Format;	Einheit;	Erzeugung/Erläuterung
-Fehler;								F.F;	99999999;			Zählerereignisse
-Serialnummer;						0.0.0;	999999999;			In Zähler laden
+Registerbeschreibung;		OBISKennung;	Format;	Einheit;	Erzeugung/Erlï¿½uterung
+Fehler;								F.F;	99999999;			Zï¿½hlerereignisse
+Serialnummer;						0.0.0;	999999999;			In Zï¿½hler laden
 Energie A+ Tariflos;				1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
 Energie A- Tariflos;				2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
 aktuelle Uhrzeit;					0.9.1;	23:59:59;			Uhrenbaustein
@@ -107,8 +107,8 @@ INSERT INTO jamis VALUES (
 	
 mysql -u root -proot
 USE logdata;
-DROP TABLE IF EXISTS xamis;
-CREATE TABLE xamis(
+DROP TABLE IF EXISTS sg;
+CREATE TABLE sg(
 	id int not null primary key auto_increment,
 	EM_0_9_1 TIME,
 	EM_0_9_2 DATE,
@@ -127,7 +127,7 @@ CREATE TABLE xamis(
 	HP_PAC DECIMAL(9,3),
 	HP_TOTAL_ENERGY DECIMAL(9,3)
 	);
-INSERT INTO xamis VALUES (
+INSERT INTO sg VALUES (
 	default,
 	'07:08:09',
 	'12-12-07',

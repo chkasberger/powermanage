@@ -1,79 +1,149 @@
 package DataCollector.XML;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.log4j.Logger;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import DataCollector.D0;
-
 public class XmlConfigParser {
 	private static Logger logger = Logger.getRootLogger();
 
-	//No generics
-	List<XmlConfig> myEmpls;
-	Document dom;
-	String filePath = null;
+	private Document dom;
+	private String xmlFile;
+	//private String filePath = null;
+
+	private S0 s0;
+	private D0 d0;
+	private JSON json;
+	private MYSQL mysql;
+
+	public synchronized S0 getS0() {
+		return s0;
+	}
+
+	public synchronized D0 getD0() {
+		return d0;
+	}
+
+	public synchronized JSON getJson() {
+		return json;
+	}
+
+	public synchronized MYSQL getMysql() {
+		return mysql;
+	}
 
 	public XmlConfigParser(){
-		//create a list to hold the employee objects
-		myEmpls = new ArrayList<XmlConfig>();
+		new ArrayList<XmlConfig>();
 	}
 
-	public void parseFile(String xmlFile) {
-
+	public boolean getConfig(String xmlFile) {
+		boolean healtyConfig = false;
+		this.xmlFile = xmlFile;
 		//parse the xml file and get the dom object
-		parseXmlFile(xmlFile);
+		try {
+			parseXmlFile(xmlFile);
+			parseDocument();
+
+			healtyConfig = true;
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			logger.error(e.getMessage());
+		}
 
 		//get each employee element and create a Employee object
-		parseDocument();
 
 		//Iterate through the list and print the data
-		printData();
+		//printData();
 
+		return healtyConfig;
+	}
+
+	public boolean setConfig(String type, String nodeName, String nodeValue){
+
+		Element rootElement = dom.getDocumentElement();
+
+		NodeList nl = rootElement.getElementsByTagName("interface");
+		if(nl != null && nl.getLength() > 0) {
+
+			for(int i = 0 ; i < nl.getLength();i++) {
+
+				//logger.debug(nl.item(i));
+
+				Element subElement = (Element)nl.item(i);
+
+				//logger.debug(subElement.getAttributes().getNamedItem("type"));
+
+				if(subElement.getAttribute("type").equalsIgnoreCase(type)){
+					setConfigElement(subElement, nodeName, nodeValue);
+					try{
+						// Create file
+						FileWriter fstream = new FileWriter(xmlFile);
+						BufferedWriter out = new BufferedWriter(fstream);
+
+
+						Transformer transformer = TransformerFactory.newInstance().newTransformer();
+						transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+						//initialize StreamResult with File object to save to file
+						StreamResult result = new StreamResult(new StringWriter());
+						DOMSource source = new DOMSource(dom);
+						transformer.transform(source, result);
+
+						String xmlString = result.getWriter().toString();
+
+						out.write(xmlString);
+
+						//System.out.print(dom.toString());
+
+						//Close the output stream
+						out.close();
+						logger.debug("updated config.xml file with new offset for S0 interface");
+					}catch (Exception e){//Catch exception if any
+						System.err.println("Error: " + e.getMessage());
+					}
+				}
+			}
+
+		}
+
+		return false;
 	}
 
 
-	private void parseXmlFile(String xmlFile){
+	private void parseXmlFile(String xmlFile) throws ParserConfigurationException, SAXException, IOException{
 		//get the factory
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-		try {
 
-			//Using factory get an instance of document builder
-			DocumentBuilder db = dbf.newDocumentBuilder();
+		//Using factory get an instance of document builder
+		DocumentBuilder db = dbf.newDocumentBuilder();
 
-			//parse using builder to get DOM representation of the XML file
-			dom = db.parse(xmlFile);
-			logger.debug("File name: " + xmlFile);
-
-
-		}catch(ParserConfigurationException pce) {
-			logger.error(pce.getMessage());
-		}catch(SAXException se) {
-			logger.error(se.getMessage());
-		}catch(IOException ioe) {
-			logger.error(ioe.getMessage());
-		}
+		//parse using builder to get DOM representation of the XML file
+		dom = db.parse(xmlFile);
+		logger.debug("File name: " + xmlFile);
 	}
 
-
 	private void parseDocument(){
-		//get the root elememt
-		Element docEle = dom.getDocumentElement();
+		Element rootElement = dom.getDocumentElement();
 
-		//get a nodelist of <employee> elements
-		NodeList nl = docEle.getElementsByTagName("interface");
+		NodeList nl = rootElement.getElementsByTagName("interface");
 		if(nl != null && nl.getLength() > 0) {
 
 			for(int i = 0 ; i < nl.getLength();i++) {
@@ -86,107 +156,69 @@ public class XmlConfigParser {
 
 				switch (el.getAttribute("type")) {
 				case "JSON":
-					logger.debug("--> found JSON interface type");
-					logger.debug(getTextValue(el, "url"));
+					logger.debug("--> found JSON interface type\r\n\t"
+							+ getConfigElement(el, "url"));
+					json = new JSON();
+					json.setUrl(getConfigElement(el, "url"));
+					json.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
 					break;
 				case "D0":
 					logger.debug("found D0 interface type\r\n\t"
-							+ getTextValue(el, "port") + "\r\n\t"
-							+ getTextValue(el, "baudRate") + "\r\n\t"
-							+ getTextValue(el, "parity") + "\r\n\t"
-							+ getTextValue(el, "dataBits") + "\r\n\t"
-							+ getTextValue(el, "stopBits") + "\r\n\t"
-							+ getTextValue(el, "maxBaudRate") + "\r\n\t"
-							+ getTextValue(el, "interval"));
+							+ getConfigElement(el, "port") + "\r\n\t"
+							+ getConfigElement(el, "baudrate") + "\r\n\t"
+							+ getConfigElement(el, "parity") + "\r\n\t"
+							+ getConfigElement(el, "databits") + "\r\n\t"
+							+ getConfigElement(el, "stopbits") + "\r\n\t"
+							+ getConfigElement(el, "maxbaudrate") + "\r\n\t"
+							+ getConfigElement(el, "interval"));
 
-					D0 d0 = new D0();
-					d0.setPortName(getTextValue(el, "port"));
-					d0.setBaudRate(Integer.parseInt(getTextValue(el, "baudRate")));
-					d0.setParity(Integer.parseInt(getTextValue(el, "parity")));
-					d0.setDataBits(Integer.parseInt(getTextValue(el, "dataBits")));
-					d0.setStopBits(Integer.parseInt(getTextValue(el, "stopBits")));
-					d0.setMaxBaudRate(Integer.parseInt(getTextValue(el, "maxBaudRate")));
-					d0.setInterval(Integer.parseInt(getTextValue(el, "interval")));
+					d0 = new D0();
+					d0.setPortName(getConfigElement(el, "port"));
+					d0.setBaudRate(Integer.parseInt(getConfigElement(el, "baudrate")));
+					d0.setParity(Integer.parseInt(getConfigElement(el, "parity")));
+					d0.setDataBits(Integer.parseInt(getConfigElement(el, "databits")));
+					d0.setStopBits(Integer.parseInt(getConfigElement(el, "stopbits")));
+					d0.setMaxBaudRate(Integer.parseInt(getConfigElement(el, "maxbaudrate")));
+					d0.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
 					break;
 				case "S0":
-					logger.debug("--> found S0 interface type");
-					logger.debug(getTextValue(el, "ticksPerKwh"));
-					logger.debug(getTextValue(el, "offset"));
+					logger.debug("--> found S0 interface type\r\n\t"
+							+ getConfigElement(el, "ticksperkwh") + "\r\n\t"
+							+ getConfigElement(el, "offset") + "\r\n\t"
+							+ getConfigElement(el, "gpiopin") + "\r\n\t"
+							+ getConfigElement(el, "pullresistance") + "\r\n\t"
+							+ getConfigElement(el, "interval"));
+					s0 = new S0();
+					s0.setTicksPerKwh(Double.parseDouble(getConfigElement(el, "ticksperkwh")));
+					s0.setOffset(Double.parseDouble(getConfigElement(el, "offset")));
+					s0.setGpioPin(getConfigElement(el, "gpiopin"));
+					s0.setPullResistance(getConfigElement(el, "pullresistance"));
+					s0.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
 					break;
 				case "DB":
-					logger.debug("--> found DB interface type");
-					logger.debug(getTextValue(el, "name"));
-					logger.debug(getTextValue(el, "table"));
-					logger.debug(getTextValue(el, "user"));
-					logger.debug(getTextValue(el, "password"));
+					logger.debug("--> found DB interface type\r\n\t"
+							+ getConfigElement(el, "hostname") + "\r\n\t"
+							+ getConfigElement(el, "database") + "\r\n\t"
+							+ getConfigElement(el, "table") + "\r\n\t"
+							+ getConfigElement(el, "user") + "\r\n\t"
+							+ getConfigElement(el, "password"));
+					mysql = new MYSQL();
+					mysql.setHostname(getConfigElement(el, "hostname"));
+					mysql.setDatabase(getConfigElement(el, "database"));
+					mysql.setTable(getConfigElement(el, "table"));
+					mysql.setUser(getConfigElement(el, "user"));
+					mysql.setPassword(getConfigElement(el, "password"));
+					mysql.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
 					break;
 
 				default:
 					break;
 				}
-
-
-
-
-				/*
-				//get the employee element
-
-				Element el = (Element)nl.item(i);
-
-				//get the Employee object
-				XmlConfig xmlConfig = getConfigElement(el);
-
-				//add it to list
-				myEmpls.add(xmlConfig);
-				 */
 			}
 		}
 	}
 
-
-	/**
-	 * I take an employee element and read the values in, create
-	 * an Employee object and return it
-	 * @param empEl
-	 * @return
-	 */
-	private XmlConfig getConfigElement(Element empEl) {
-
-
-		NodeList foo = empEl.getChildNodes();
-
-
-		for(int i = 0; i < foo.getLength(); i++){
-			logger.debug(foo.item(i).getAttributes());
-		}
-
-		/*
-		//for each <employee> element get text or int values of
-		//name ,id, age and name
-		String name = getTextValue(empEl,"url");
-		int id = getIntValue(empEl,"Id");
-		int age = getIntValue(empEl,"Age");
-
-		String type = empEl.getAttribute("type");
-
-		//Create a new Employee with the value read from the xml nodes
-		XmlConfig cfg = new XmlConfig(name,id,age,type);
-		return cfg;
-		 */
-		return new XmlConfig();
-	}
-
-
-	/**
-	 * I take a xml element and the tag name, look for the tag and get
-	 * the text content
-	 * i.e for <employee><name>John</name></employee> xml snippet if
-	 * the Element points to employee node and tagName is name I will return John
-	 * @param ele
-	 * @param tagName
-	 * @return
-	 */
-	private String getTextValue(Element el, String tagName) {
+	private String getConfigElement(Element el, String tagName) {
 		String textVal = null;
 		NodeList nl = el.getElementsByTagName(tagName);
 
@@ -198,29 +230,21 @@ public class XmlConfigParser {
 		return textVal;
 	}
 
+	private boolean setConfigElement(Element el, String tagName, String nodeValue) {
+		boolean changedNodeValue = true;
+		NodeList nl = el.getElementsByTagName(tagName);
 
-	/**
-	 * Calls getTextValue and returns a int value
-	 * @param ele
-	 * @param tagName
-	 * @return
-	 */
-	private int getIntValue(Element ele, String tagName) {
-		//in production application you would catch the exception
-		return Integer.parseInt(getTextValue(ele,tagName));
-	}
-
-	/**
-	 * Iterate through the list and print the
-	 * content to console
-	 */
-	private void printData(){
-
-		System.out.println("No of Employees '" + myEmpls.size() + "'.");
-
-		Iterator<XmlConfig> it = myEmpls.iterator();
-		while(it.hasNext()) {
-			System.out.println(it.next().toString());
+		if(nl != null && nl.getLength() > 0) {
+			Element ele = (Element)nl.item(0);
+			try{
+				ele.getFirstChild().setNodeValue(nodeValue);
+			}
+			catch(DOMException ex){
+				logger.debug(ex.getMessage());
+				changedNodeValue = false;
+			}
 		}
+		return changedNodeValue;
 	}
+
 }

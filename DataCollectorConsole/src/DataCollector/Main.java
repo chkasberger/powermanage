@@ -19,15 +19,18 @@ import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
 import DataCollector.IO.ComPortEvent;
 import DataCollector.IO.ComPortEventListener;
-import DataCollector.JSON.PV;
-import DataCollector.JSON.PVEvent;
-import DataCollector.JSON.PVEventListener;
+import DataCollector.PV.PV;
+import DataCollector.PV.PVEvent;
+import DataCollector.PV.PVEventListener;
+import DataCollector.XML.D0;
+import DataCollector.XML.JSON;
+import DataCollector.XML.MYSQL;
+import DataCollector.XML.S0;
 import DataCollector.XML.XmlConfigParser;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
-import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
@@ -36,15 +39,10 @@ public class Main {
 	final static Logger logger = Logger.getRootLogger();
 	static Lock lock = new ReentrantLock();
 	static MySQLAccess DB;
-	final static Object[] DBData = new Object[]{"0","0","0","0","00:00:00","00-01-01","0","0","0","0",0,0,0,0,0,0};
+	final static Object[] DBData = new Object[]{"00:00:00","00-01-01",0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 	enum Hardware {AMIS, FROELING}
 	//static MySQLAccess DB;
 
-	static double ticksPerKWH = 800;	// see user manual of energy meter
-	static double offset = 1898.300;	// already consumed energy
-
-	static double totalEnergy = offset;
-	static final double powerFactor = (1000 / ticksPerKWH) * 3600; // Wh between two D0 events
 	String logFile = "d0.log";
 	static long startTime = System.currentTimeMillis();// nanoTime();
 	static long stopTime = System.currentTimeMillis();// System.nanoTime();
@@ -57,53 +55,97 @@ public class Main {
 	static Object interval = 60;
 	static Object hardwareType = Hardware.AMIS;
 
+	static XmlConfigParser config = new XmlConfigParser();
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
 		setup();
+		config(args);
+		//config(new String[]{"./jar/"});
+		createThreads();
+	}
 
-		logger.debug("here I'am!");
-		XmlConfigParser dpe = new XmlConfigParser();
-		dpe.parseFile("./cfg/config.xml");
+	private static void createThreads() {
+		Thread S0Thread = null;
+		Thread D0Thread = null;
+		Thread PVThread = null;
+		Thread DBThread = null;
 
-		/*
-		if(parseArgs(args)){
-			Thread S0Thread = new Thread(){
+		if(S0Thread == null){
+			S0Thread = new Thread(){
 				@Override
 				public void run(){
-					createTaskS0(interval);
+					S0 s0 = new S0();
+					s0 = config.getS0();
+					if(s0 != null)
+						createTaskS0(s0);
+					else
+						logger.error("no valid config for S0 interface found!");
 				}
 			};
-			Thread D0Thread = new Thread(){
-				@Override
-				public void run(){
-					createTaskD0(portName, baudRate, parityBit, dataBits, stopBits, interval);
-				}
-			};
-			Thread PVThread = new Thread(){
-				@Override
-				public void run(){
-					createTaskPV("http://10.0.0.31/solar_api/GetInverterRealtimeData.cgi?Scope=System", interval);
-				}
-			};
-			Thread DBThread = new Thread(){
-				@Override
-				public void run(){
-					createTaskDB(interval);
-				}
-			};
+		}
 
-			S0Thread.start();
-			D0Thread.start();
-			PVThread.start();
-			DBThread.start();
-			}
-			else{
-				logger.error("No valid input found!");
-			}
-		 */
+		if(D0Thread == null){
+			D0Thread = new Thread(){
+
+				@Override
+				public void run(){
+					//createTaskD0(portName, baudRate, parityBit, dataBits, stopBits, interval);
+					D0 d0 = new D0();
+					d0 = config.getD0();
+					if(d0 != null)
+						createTaskD0(d0);
+					else
+						logger.error("no valid config for D0 interface found!");
+				}
+			};
+		}
+
+		if(PVThread == null){
+			PVThread = new Thread(){
+				@Override
+				public void run(){
+					//createTaskPV("http://10.0.0.31/solar_api/GetInverterRealtimeData.cgi?Scope=System", interval);
+					JSON json = new JSON();
+					json = config.getJson();
+					if(json != null)
+						createTaskPV(json);
+					else
+						logger.error("no valid config for JSON interface found!");
+				}
+			};
+		}
+
+		if(DBThread == null){
+			DBThread = new Thread(){
+				@Override
+				public void run(){
+					MYSQL mysql = new MYSQL();
+					mysql = config.getMysql();
+					if(mysql != null)
+						createTaskDB(mysql);
+					else
+						logger.error("no valid config for MYSQL interface found!");
+				}
+			};
+		}
+
+		S0Thread.start();
+		D0Thread.start();
+		PVThread.start();
+		DBThread.start();
+	}
+
+	private static void config(String[] args) {
+		if(config.getConfig(args[0] + "config.xml")){
+			logger.debug("found valid config file");
+		} else if (parseArgs(args)){
+			logger.debug("no valid config file available; try to use startup arguments");
+		} else{
+			logger.error("No valid input found!");
+		}
 	}
 
 	private static void setup() {
@@ -248,44 +290,57 @@ public class Main {
 	private static int flag = 0;
 	private static double meanPower = 0;
 	private static double meanEnergy = 0;
+	private static double totalEnergy = 0;// = offset;
+	private static double powerFactor;// = (1000 / ticksPerKWH) * 3600; // Wh between two D0 events
 
-	private static void createTaskS0(Object interval) {
+	private static void createTaskS0(final S0 s0) {
 		final Object[] S0DbData = new Object[]{0.0,0.0};
-		final Lock lock = new ReentrantLock();
+		final Lock localLock = new ReentrantLock();
+		final double kwhPerTick = (1 / s0.getTicksPerKwh());	// see user manual of energy meter
+
+		totalEnergy = s0.getOffset();
+		powerFactor = (1000 / s0.getTicksPerKwh()) * 3600; // Wh between two D0 events
+		logger.debug("S0 interface has kwhPerTick: " + kwhPerTick);
 
 		GpioController gpio = GpioFactory.getInstance();
-		GpioPinDigitalInput Counter = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, "D0", PinPullResistance.PULL_DOWN);
+		//GpioPinDigitalInput Counter = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, "D0", PinPullResistance.PULL_DOWN);
+		GpioPinDigitalInput Counter = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, "S0", s0.getPullResistance());
+		//logger.debug("PIN" + RaspiPin.GPIO_00.toString() + "RESISTANCE" + s0.getPullResistance().toString());
 		Counter.addListener(new GpioPinListenerDigital() {
 
 			@Override
 			public void handleGpioPinDigitalStateChangeEvent(
 					GpioPinDigitalStateChangeEvent event) {
-
+				//logger.debug("...............> got GPIO event!");
 				// display pin state on console
 				if(event.getState().toString().equals("HIGH"))
 				{
+					//logger.debug("type of S0 event: " + event.getState().toString());
 					//double deltaTime;
 					//stopTime = System.currentTimeMillis();
 					double deltaTime = System.currentTimeMillis() - startTime;
 					startTime = System.currentTimeMillis();
 
 					double currentPower = powerFactor / deltaTime;
-					totalEnergy = totalEnergy + 0.001250;
 
 					double tmpPower = currentPower * 1000;
 					tmpPower = Math.round(tmpPower);
 					tmpPower = tmpPower / 1000;
 
-					double tmpEnergy = Math.round(totalEnergy * 1000);
-					tmpEnergy = tmpEnergy / 1000;
+					double tmpEnergy; //= Math.round(totalEnergy * 1000);
 
-					lock.lock();
+					logger.debug("-----> S0 Energy: " + totalEnergy);
+					localLock.lock();
 					{
 						flag++;
+						totalEnergy = totalEnergy + kwhPerTick; //kWh between two ticks
+						logger.debug("calculation: " + 1 / s0.getTicksPerKwh());
+						//						tmpEnergy = Math.round(totalEnergy * 1000);
+						tmpEnergy = totalEnergy;
+						logger.debug("-----> S0 Energy: " + totalEnergy);
 						meanPower = meanPower + tmpPower;
-						meanEnergy = meanEnergy + tmpEnergy;
 					}
-					lock.unlock();
+					localLock.unlock();
 
 					String log = (" --> "+ event.getPin() + " = " + event.getState() + ";\t" +
 							"time since last event: " + deltaTime + "ms;\t" +
@@ -300,8 +355,8 @@ public class Main {
 		//create timer schedule for S0 interface
 		Timer timer_S0 = new Timer();
 		//long delay_PV = (Integer)interval*1000;
-		long delay_S0 = 30*1000;
-		long interval_S0 = (int)interval*1000;
+		long delay_S0 = 0;
+		long interval_S0 = s0.getInterval()*1000;
 		//timer_PV.schedule(new PVTask(pv), delay_PV, interval_PV);
 		timer_S0.schedule(new TimerTask() {
 
@@ -309,52 +364,53 @@ public class Main {
 			public void run() {
 				logger.debug("write S0 values to variables!");
 
+				double mp;
+				double te;
+				localLock.lock();
+				{
+					mp = (Math.round((meanPower / flag) * 1000));
+					te = totalEnergy;
+					meanPower = 0;
+
+					config.setConfig("s0", "offset", String.valueOf(te));
+
+				}
+				localLock.unlock();
+
 				lock.lock();
 				{
-					meanPower = (Math.round((meanPower / flag) * 1000));
-					meanEnergy = (Math.round((meanEnergy / flag) * 1000));
-
-					S0DbData[0] = meanPower / 1000;;
-					S0DbData[1] = meanEnergy / 1000;;
+					S0DbData[0] = mp / 1000;;
+					S0DbData[1] = te;;
 					for (int i = 0; i < S0DbData.length; i++) {
 						DBData[i+14] = S0DbData[i];
 						logger.debug("mean values of S0 interface: " + DBData[i + 14].toString());
 					}
-					meanPower = 0;
-					meanEnergy = 0;
 				}
 				lock.unlock();
 			}
 		}, delay_S0, interval_S0);
-
-
 	}
 
-	private static void createTaskD0(
-			final Object portName,
-			final Object baudRate,
-			final Object parityBit,
-			final Object dataBits,
-			final Object stopBits,
-			Object interval) {
+	private static void createTaskD0(final D0 d0) {
 		final ComPort port = new ComPort();
 		try {
-			port.connect(portName, baudRate, parityBit, dataBits, stopBits);
+			port.connect(d0.getPortName(), d0.getBaudRate(), parityBit, dataBits, stopBits);
+			//port.connect(d0.getPortName(), d0.getBaudRate(), d0.getParity(), d0.getDataBits(), d0.getStopBits());
 		} catch (PortInUseException e) {
 			logger.error(e.getMessage());
 		}
 
 		//create timer schedule for D0 interface
 		Timer timer_D0 = new Timer();
-		long delay_D0 = 10*1000;
-		long interval_D0 = (Integer)interval*1000;
+		long delay_D0 = 0;
+		long interval_D0 = d0.getInterval()*1000;
 		//timer_AMIS.schedule(new ComPortTask(port, portName, baudRate, parityBit, dataBits, stopBits), delay_AMIS, interval_AMIS);
 		timer_D0.schedule(new TimerTask() {
 
 			@Override
 			public void run() {
 				try {
-					port.portSettings(portName, baudRate, parityBit, dataBits, stopBits);
+					port.portSettings(d0.getPortName(), d0.getBaudRate(), parityBit, dataBits, stopBits);
 					port.out.write(new byte[] {0x2f, 0x3f, 0x21, 0x0d, 0x0a});
 					port.out.flush();
 				} catch (IOException e) {
@@ -433,16 +489,16 @@ public class Main {
 		});
 	}
 
-	private static void createTaskPV(String host, Object interval) {
-		final PV pv = new PV(host);
+	private static void createTaskPV(final JSON json) {
+		final PV pv = new PV(json.getUrl());
 		//final PV pv = new PV("http://wilma-pt2-24.fronius.com/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System");
 		//pv.start();
 
 		//create timer schedule for JSON interface
 		Timer timer_PV = new Timer();
 		//long delay_PV = (Integer)interval*1000;
-		long delay_PV = 10*1000;
-		long interval_PV = (int)interval*1000;
+		long delay_PV = 0;
+		long interval_PV = json.getInterval()*1000;
 		//timer_PV.schedule(new PVTask(pv), delay_PV, interval_PV);
 		timer_PV.schedule(new TimerTask() {
 
@@ -462,7 +518,7 @@ public class Main {
 				double[] tmpIntArray = (double[])evt.getSource();
 				lock.lock();
 				for (int i = 0; i < tmpIntArray.length; i++) {
-					DBData[i+10] = (double)tmpIntArray[i];
+					DBData[i+10] = tmpIntArray[i];
 					logger.info("\t\t" + DBData[i + 10].toString());
 				}
 				lock.unlock();
@@ -470,11 +526,11 @@ public class Main {
 		});
 	}
 
-	private static void createTaskDB(Object interval) {
-		DB = new MySQLAccess();
+	private static void createTaskDB(final MYSQL mysql) {
+		DB = new MySQLAccess(mysql);
 		Timer timer_DB = new Timer();
-		long delay_DB = 40*1000;
-		long interval_DB = (int)interval*1000;
+		long delay_DB = 60*1000;
+		long interval_DB = mysql.getInterval()*1000;
 		//timer_DB.schedule(new Task(DBData), 10000, delay_DB);
 		timer_DB.schedule(new TimerTask() {
 			@Override

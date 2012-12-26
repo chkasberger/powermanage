@@ -1,7 +1,7 @@
 /**
  * 
  */
-package DataCollector.JSON;
+package DataCollector.PV;
 
 import java.util.EventObject;
 
