@@ -11,6 +11,8 @@ import java.sql.Time;
 
 import org.apache.log4j.Logger;
 
+import DataCollector.XML.MYSQL;
+
 public class MySQLAccess {
 	private static Logger logger = Logger.getRootLogger();
 
@@ -19,15 +21,23 @@ public class MySQLAccess {
 	private PreparedStatement preparedStatement = null;
 	private PreparedStatement preparedStatementSet = null;
 	private ResultSet resultSet = null;
-	private final String hostName = "localhost";
-	private final String dataBase = "logdata";
-	private final String dataBaseTable = "logdata.xamis";
+	private String hostName;// = "localhost";
+	private String dataBase;// = "logdata";
+	private String dataBaseTable;// = "logdata.xamis";
+	private String user;// = "logdata.xamis";
+	private String password;// = "logdata.xamis";
 	//private final String dataTable = "amis";
 
-	public MySQLAccess()
+	public MySQLAccess(MYSQL mysql)
 	{
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
+
+			hostName = mysql.getHostname();
+			dataBase = mysql.getDatabase();// = "logdata";
+			dataBaseTable = mysql.getTable();// = "logdata.xamis";
+			user = mysql.getUser();// = "logdata.xamis";
+			password = mysql.getPassword();// = "logdata.xamis";
 
 		} catch (ClassNotFoundException e) {
 			logger.error(e.getMessage());
@@ -39,7 +49,7 @@ public class MySQLAccess {
 		logger.debug("try to write data to: " + dataBaseTable);
 		try {
 			dbConnection = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
-					+ "user=DataCollector&password=collect");
+					+ "user=" + user + "&password=" + password);
 			logger.debug("connected to MYSQL DB.TABLE: " + dataBaseTable);
 
 			preparedStatementSet = prepareStatementSet(data);
@@ -49,35 +59,34 @@ public class MySQLAccess {
 			preparedStatementSet.close();
 			logger.debug("closed prepared statement set");
 
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			logger.error(e.toString());
 			//e.printStackTrace();
 		}
 		finally
 		{
 			close();
-
 		}
 	}
 
 	private PreparedStatement prepareStatementSet(Object[] data) {
-		logger.debug("DB values: "
-				+ (Time.valueOf((String)data[0]) 			+ "\t\tcurrent time D0 interface\r\n")	//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
-				+ (Date.valueOf("20" + (String)data[1])	+ "\t\tcurrent date D0 interface\r\n")	//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
-				+ (data[2] 	+ "\t\terror counter D0 interface\r\n")	//Fehler;						F.F;	99999999;	Zählerereignisse
-				+ (data[3] 	+ "\t\tserial number D0 interface\r\n")	//Serialnummer;					0.0.0;	999999999;			In Zähler laden
-				+ (data[4] 	+ "\t\tconsumed energy D0 interface\r\n")	//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
-				+ (data[5] 	+ "\t\tsupplied energy D0 interface\r\n")	//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
-				+ (data[6]	+ "\t\tcurrent consumed effective power D0 interface\r\n")	//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
-				+ (data[7]	+ "\t\tcurrent supplied effective power D0 interface\r\n")	//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
-				+ (data[8]	+ "\t\tcurrent consumed reactive power D0 interface\r\n")	//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
-				+ (data[9]	+ "\t\tcurrent supplied reactive power D0 interface\r\n")	//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
-				+ (data[10]	+ "\t\tcurrent produced power JSON interface\r\n")	//momentane AC Power der PV-Anlage
-				+ (data[11]	+ "\t\tcurrent produced total energy JSON interface\r\n")	//produzierte Gesamtenergie der PV-Anlage
-				+ (data[12]	+ "\t\tcurrent produced year energy JSON interface\r\n")	//produzierte Jahresenergie der PV-Anlage
-				+ (data[13]	+ "\t\tcurrent produced day energy JSON interface\r\n")	//produzierte Tagesenergie der PV-Anlage
-				+ (data[14]	+ "\t\tcurrent consumed power S0 interface\r\n")		//produzierte Tagesenergie der PV-Anlage
-				+ (data[15]	+ "\t\tcurrent consumed energy S0 interface"));		//produzierte Tagesenergie der PV-Anlage
+		logger.debug("DB values: ");
+		logger.debug(Time.valueOf((String)data[0]) 			+ "\t\tcurrent time D0 interface");	//aktuelle Uhrzeit;				0.9.1;	23:59:59;			Uhrenbaustein
+		logger.debug(Date.valueOf("20" + (String)data[1])	+ "\t\tcurrent date D0 interface");	//aktuelles Datum;				0.9.2;	99-12-31;			Uhrenbaustein
+		logger.debug(data[2] 	+ "\t\terror counter D0 interface");	//Fehler;						F.F;	99999999;	Zählerereignisse
+		logger.debug (data[3] 	+ "\t\tserial number D0 interface");	//Serialnummer;					0.0.0;	999999999;			In Zähler laden
+		logger.debug(data[4] 	+ "\t\tconsumed energy D0 interface");	//Energie A+ Tariflos;			1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
+		logger.debug(data[5] 	+ "\t\tsupplied energy D0 interface");	//Energie A- Tariflos;			2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
+		logger.debug(data[6]	+ "\t\tcurrent consumed effective power D0 interface");	//momentane Wirkleistung P+;	1.7.0;	99.999;		kW;		Messsystem
+		logger.debug(data[7]	+ "\t\tcurrent supplied effective power D0 interface");	//momentane Wirkleistung P-;	2.7.0;	99.999;		kW;		Messsystem
+		logger.debug(data[8]	+ "\t\tcurrent consumed reactive power D0 interface");	//momentane Blindleistung Q+;	3.7.0;	99.999;		kvAr;	Messsystem
+		logger.debug(data[9]	+ "\t\tcurrent supplied reactive power D0 interface");	//momentane Blindleistung Q-;	4.7.0;	99.999;		kvAr;	Messsystem
+		logger.debug(data[10]	+ "\t\tcurrent produced power JSON interface");	//momentane AC Power der PV-Anlage
+		logger.debug(data[11]	+ "\t\tcurrent produced total energy JSON interface");	//produzierte Gesamtenergie der PV-Anlage
+		logger.debug(data[12]	+ "\t\tcurrent produced year energy JSON interface");	//produzierte Jahresenergie der PV-Anlage
+		logger.debug(data[13]	+ "\t\tcurrent produced day energy JSON interface");	//produzierte Tagesenergie der PV-Anlage
+		logger.debug(data[14]	+ "\t\tcurrent consumed power S0 interface");		//produzierte Tagesenergie der PV-Anlage
+		logger.debug(data[15]	+ "\t\tcurrent consumed energy S0 interface");		//produzierte Tagesenergie der PV-Anlage
 
 		PreparedStatement pss = null;
 		try {

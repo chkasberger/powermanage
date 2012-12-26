@@ -1,4 +1,4 @@
-package DataCollector;
+package DataCollector.XML;
 
 import gnu.io.SerialPort;
 
@@ -21,64 +21,63 @@ public class D0 {
 		return baudRate;
 	}
 
-	public void setBaudRate(int baudRate) {
+	public synchronized void setBaudRate(int baudRate) {
 		this.baudRate = baudRate;
 	}
 
-	public String getPortName() {
+	public synchronized String getPortName() {
 		return portName;
 	}
 
-	public void setPortName(String portName) {
+	public synchronized void setPortName(String portName) {
 		this.portName = portName;
 	}
 
-	public int getParity() {
+	public synchronized int getParity() {
 		return parity;
 	}
 
-	public void setParity(int parity) {
+	public synchronized void setParity(int parity) {
 		this.parity = parity;
 	}
 
-	public int getDataBits() {
+	public synchronized int getDataBits() {
 		return dataBits;
 	}
 
-	public void setDataBits(int dataBits) {
+	public synchronized void setDataBits(int dataBits) {
 		this.dataBits = dataBits;
 	}
 
-	public int getStopBits() {
+	public synchronized int getStopBits() {
 		return stopBits;
 	}
 
-	public void setStopBits(int stopBits) {
+	public synchronized void setStopBits(int stopBits) {
 		this.stopBits = stopBits;
 	}
 
-	public SerialPort getSerialPort() {
+	public synchronized SerialPort getSerialPort() {
 		return serialPort;
 	}
 
-	public void setSerialPort(SerialPort serialPort) {
+	public synchronized void setSerialPort(SerialPort serialPort) {
 		this.serialPort = serialPort;
 	}
 
-	public int getMaxBaudRate() {
+	public synchronized int getMaxBaudRate() {
 		return maxBaudRate;
 	}
 
-	public void setMaxBaudRate(int maxBaudRate) {
+	public synchronized void setMaxBaudRate(int maxBaudRate) {
 		this.maxBaudRate = maxBaudRate;
 	}
 
-	public int getInterval() {
+	public synchronized int getInterval() {
 		return interval;
 	}
 
-	public void setInterval(int interval) {
+	public synchronized void setInterval(int interval) {
 		this.interval = interval;
 	}
-
 }

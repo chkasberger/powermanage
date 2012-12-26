@@ -1,10 +1,9 @@
-package DataCollector.JSON;
+package DataCollector.PV;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.Iterator;
@@ -25,16 +24,10 @@ public class PV{
 	//static String url;
 	URL url;
 
-	public PV(String str) {
-		try {
-			//url = new URL("http://wilma-pt2-12/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System");
-			//url = new URL("http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System");
-			url = new URL(str);
-
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public PV(URL url) {
+		//url = new URL("http://wilma-pt2-12/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System");
+		//url = new URL("http://10.0.0.3/solar_api/GetInverterRealtimeData.cgi?Scope=System");
+		this.url = url;
 	}
 
 	/**
@@ -80,7 +73,7 @@ public class PV{
 		JSONObject DAY_ENERGY = null;
 		JSONObject YEAR_ENERGY = null;
 		JSONObject PAC = null;
-		double[] values = new double[]{0.0,0.0,0.0,0.0};
+		double[] values = new double[4];
 		try {
 			jTok = new JSONTokener(bIn);
 			jObj = new JSONObject(jTok).getJSONObject("Body").getJSONObject("Data");
@@ -118,7 +111,7 @@ public class PV{
 		}
 
 		//System.out.print(vKey + "\r\n\t" + name + ":");
-		double allValues = 0;
+		double allValues = 0.0;
 		while(vKey.hasNext()) {
 
 			double value;
@@ -133,12 +126,14 @@ public class PV{
 		}
 		//System.out.print("\r\n\t\t" + "ALL" + "\t" + allValues + "\t" + unit);
 
-		double foo = Math.round(allValues);
-		System.out.print("\r\n\t\t" + "ALL" + "\t" + foo / 1000 + "\t" + unit);
+		double total = Math.round(allValues);
+		total = total / 1000;
+
+		System.out.print("\r\n\t\t" + "ALL" + "\t" + total + "\t" + unit);
 		//System.out.print("\r\n\t\t" + "ALL" + "\t" + foo/1000 + "\t" + unit);
 
 
-		return foo / 1000;
+		return 0.0 + total;
 		//System.out.println();
 	}
 }
