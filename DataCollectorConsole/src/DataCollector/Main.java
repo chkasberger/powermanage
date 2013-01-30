@@ -2,7 +2,12 @@ package DataCollector;
 
 import gnu.io.PortInUseException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Timer;
@@ -14,6 +19,7 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
+import org.json.JSONObject;
 
 import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
@@ -40,6 +46,9 @@ public class Main {
 	static Lock lock = new ReentrantLock();
 	static MySQLAccess DB;
 	final static Object[] DBData = new Object[]{"00:00:00","00-01-01",0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+	static Socket socket;
+	static BufferedReader in;
+	static PrintWriter out;
 	enum Hardware {AMIS, FROELING}
 	//static MySQLAccess DB;
 
@@ -77,6 +86,9 @@ public class Main {
 			S0Thread = new Thread(){
 				@Override
 				public void run(){
+					Thread thisThread = Thread.currentThread();
+					thisThread.setName("S0Thread");
+					
 					S0 s0 = new S0();
 					s0 = config.getS0();
 					if(s0 != null)
@@ -89,10 +101,11 @@ public class Main {
 
 		if(D0Thread == null){
 			D0Thread = new Thread(){
-
 				@Override
 				public void run(){
-					//createTaskD0(portName, baudRate, parityBit, dataBits, stopBits, interval);
+					Thread thisThread = Thread.currentThread();
+					thisThread.setName("D0Thread");
+					
 					D0 d0 = new D0();
 					d0 = config.getD0();
 					if(d0 != null)
@@ -107,7 +120,9 @@ public class Main {
 			PVThread = new Thread(){
 				@Override
 				public void run(){
-					//createTaskPV("http://10.0.0.31/solar_api/GetInverterRealtimeData.cgi?Scope=System", interval);
+					Thread thisThread = Thread.currentThread();
+					thisThread.setName("PVThread");
+					
 					JSON json = new JSON();
 					json = config.getJson();
 					if(json != null)
@@ -120,14 +135,18 @@ public class Main {
 
 		if(DBThread == null){
 			DBThread = new Thread(){
-				@Override
 				public void run(){
+					Thread thisThread = Thread.currentThread();
+					thisThread.setName("DBThread");
+					
 					MYSQL mysql = new MYSQL();
 					mysql = config.getMysql();
-					if(mysql != null)
-						createTaskDB(mysql);
-					else
-						logger.error("no valid config for MYSQL interface found!");
+
+					createTaskDB(mysql);
+					while(true){
+						createSocketCommunication(mysql);
+						logger.debug("Socket Thread crashed,... try again!");
+					}
 				}
 			};
 		}
@@ -149,7 +168,9 @@ public class Main {
 	}
 
 	private static void setup() {
-		Level logLevel = Level.DEBUG;
+		Level logLevel;
+		//logLevel = Level.INFO;
+		logLevel = Level.DEBUG;
 		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
 		try {
 			SimpleLayout layout = new SimpleLayout();
@@ -234,7 +255,6 @@ public class Main {
 						}
 
 						logger.debug("parity is set to " + parityBit.toString());
-						logger.debug("parity is set to " + parityBit.toString());
 					}
 					if(string.startsWith("d")) // data bits
 					{
@@ -303,21 +323,15 @@ public class Main {
 		logger.debug("S0 interface has kwhPerTick: " + kwhPerTick);
 
 		GpioController gpio = GpioFactory.getInstance();
-		//GpioPinDigitalInput Counter = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, "D0", PinPullResistance.PULL_DOWN);
 		GpioPinDigitalInput Counter = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, "S0", s0.getPullResistance());
-		//logger.debug("PIN" + RaspiPin.GPIO_00.toString() + "RESISTANCE" + s0.getPullResistance().toString());
 		Counter.addListener(new GpioPinListenerDigital() {
 
 			@Override
 			public void handleGpioPinDigitalStateChangeEvent(
 					GpioPinDigitalStateChangeEvent event) {
-				//logger.debug("...............> got GPIO event!");
-				// display pin state on console
+
 				if(event.getState().toString().equals("HIGH"))
 				{
-					//logger.debug("type of S0 event: " + event.getState().toString());
-					//double deltaTime;
-					//stopTime = System.currentTimeMillis();
 					double deltaTime = System.currentTimeMillis() - startTime;
 					startTime = System.currentTimeMillis();
 
@@ -354,12 +368,9 @@ public class Main {
 
 		//create timer schedule for S0 interface
 		Timer timer_S0 = new Timer();
-		//long delay_PV = (Integer)interval*1000;
 		long delay_S0 = 0;
 		long interval_S0 = s0.getInterval()*1000;
-		//timer_PV.schedule(new PVTask(pv), delay_PV, interval_PV);
 		timer_S0.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
 				logger.debug("write S0 values to variables!");
@@ -371,9 +382,8 @@ public class Main {
 					mp = (Math.round((meanPower / flag) * 1000));
 					te = totalEnergy;
 					meanPower = 0;
-
+					flag = 0;
 					config.setConfig("s0", "offset", String.valueOf(te));
-
 				}
 				localLock.unlock();
 
@@ -394,8 +404,7 @@ public class Main {
 	private static void createTaskD0(final D0 d0) {
 		final ComPort port = new ComPort();
 		try {
-			port.connect(d0.getPortName(), d0.getBaudRate(), parityBit, dataBits, stopBits);
-			//port.connect(d0.getPortName(), d0.getBaudRate(), d0.getParity(), d0.getDataBits(), d0.getStopBits());
+			port.connect(d0.getPortName(), d0.getBaudRate(), d0.getParity(), d0.getDataBits(), d0.getStopBits());
 		} catch (PortInUseException e) {
 			logger.error(e.getMessage());
 		}
@@ -410,7 +419,8 @@ public class Main {
 			@Override
 			public void run() {
 				try {
-					port.portSettings(d0.getPortName(), d0.getBaudRate(), parityBit, dataBits, stopBits);
+					port.portSettings(d0.getPortName(), d0.getBaudRate(), d0.getParity(), d0.getDataBits(), d0.getStopBits());
+					//port.portSettings(d0.getPortName(), d0.getBaudRate(), parityBit, dataBits, stopBits);
 					port.out.write(new byte[] {0x2f, 0x3f, 0x21, 0x0d, 0x0a});
 					port.out.flush();
 				} catch (IOException e) {
@@ -491,15 +501,11 @@ public class Main {
 
 	private static void createTaskPV(final JSON json) {
 		final PV pv = new PV(json.getUrl());
-		//final PV pv = new PV("http://wilma-pt2-24.fronius.com/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System");
-		//pv.start();
 
 		//create timer schedule for JSON interface
 		Timer timer_PV = new Timer();
-		//long delay_PV = (Integer)interval*1000;
 		long delay_PV = 0;
 		long interval_PV = json.getInterval()*1000;
-		//timer_PV.schedule(new PVTask(pv), delay_PV, interval_PV);
 		timer_PV.schedule(new TimerTask() {
 
 			@Override
@@ -513,7 +519,6 @@ public class Main {
 
 			@Override
 			public void PVEventFired(PVEvent evt) {
-				// TODO Auto-generated method stub
 				logger.debug("\tPV values:");
 				double[] tmpIntArray = (double[])evt.getSource();
 				lock.lock();
@@ -531,18 +536,67 @@ public class Main {
 		Timer timer_DB = new Timer();
 		long delay_DB = 60*1000;
 		long interval_DB = mysql.getInterval()*1000;
-		//timer_DB.schedule(new Task(DBData), 10000, delay_DB);
 		timer_DB.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				lock.lock();
 				DB.Set(DBData);
-				/*for(int i = 0; i < DBData.length; i++){
-					DBData[i] = 0;
-				}
-				 */
 				lock.unlock();
 			}
 		}, delay_DB, interval_DB);
 	}
+	
+	private static boolean createSocketCommunication(MYSQL mysql){
+		MySQLAccess mysqlAccess = null;
+		ServerSocket serverSocket = null;
+		Socket clientSocket = null;
+		String inputLine;
+		
+		if(mysql != null){
+			while(!Thread.currentThread().isInterrupted()){
+				mysqlAccess = new MySQLAccess(mysql);
+				
+				try {
+					serverSocket = new ServerSocket(mysql.getPort());
+					clientSocket = serverSocket.accept();
+					in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+					out = new PrintWriter(clientSocket.getOutputStream(), true);
+				} catch (IOException e) {
+					logger.error("Could not listen on port: " + mysql.getPort() + ".");							
+				}
+
+				try {
+					while ((inputLine = in.readLine()) != null) {
+						logger.debug("request for data between: " + inputLine);
+						Object[] input = inputLine.split("[ T]");
+						JSONObject jObject = null;
+						try {
+							jObject = mysqlAccess.readDataBase(input);
+							out.println(jObject.toString());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}							
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				try {
+					out.close();
+					in.close();
+					clientSocket.close();
+					serverSocket.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
+			}
+		}
+		else{
+			logger.error("no valid config for MYSQL interface found!");
+		}		
+		return false;
+	}
+	
 }
