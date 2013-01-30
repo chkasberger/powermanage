@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <config>
     <interface type="JSON">
-    	<url>http://10.0.0.31/solar_api/GetInverterRealtimeData.cgi?Scope=System</url>	
+    	<url>http://solar/solar_api/GetInverterRealtimeData.cgi?Scope=System</url>	
 		<interval>60</interval>
     </interface>
     <interface type="D0">
@@ -24,6 +24,7 @@
 		<hostname>localhost</hostname>
 		<database>logdata</database>
 		<table>xamis</table>
+		<port>56665</port>
 		<user>DataCollector</user>
 		<password>collect</password>
 		<interval>60</interval>

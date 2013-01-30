@@ -1,15 +1,18 @@
 package DataCollector.XML;
 
 import gnu.io.SerialPort;
+import DataCollector.IO.ComPort.DataBits;
+import DataCollector.IO.ComPort.Parity;
+import DataCollector.IO.ComPort.StopBits;
 
 public class D0 {
 	private SerialPort serialPort;
 
 	private String portName = "";
 	private int baudRate = 300;
-	private int parity = SerialPort.PARITY_EVEN;
-	private int dataBits = SerialPort.DATABITS_7;
-	private int stopBits = SerialPort.STOPBITS_1;
+	private Parity parity = Parity.EVEN;
+	private DataBits dataBits = DataBits.SEVEN;
+	private StopBits stopBits = StopBits.ONE;
 	private int maxBaudRate = 9600;
 	private int interval = 60;
 
@@ -33,27 +36,27 @@ public class D0 {
 		this.portName = portName;
 	}
 
-	public synchronized int getParity() {
+	public synchronized Parity getParity() {
 		return parity;
 	}
 
-	public synchronized void setParity(int parity) {
+	public synchronized void setParity(Parity parity) {
 		this.parity = parity;
 	}
 
-	public synchronized int getDataBits() {
+	public synchronized DataBits getDataBits() {
 		return dataBits;
 	}
 
-	public synchronized void setDataBits(int dataBits) {
+	public synchronized void setDataBits(DataBits dataBits) {
 		this.dataBits = dataBits;
 	}
 
-	public synchronized int getStopBits() {
+	public synchronized StopBits getStopBits() {
 		return stopBits;
 	}
 
-	public synchronized void setStopBits(int stopBits) {
+	public synchronized void setStopBits(StopBits stopBits) {
 		this.stopBits = stopBits;
 	}
 

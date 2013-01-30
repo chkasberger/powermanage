@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,13 +21,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import DataCollector.IO.ComPort.DataBits;
+import DataCollector.IO.ComPort.Parity;
+import DataCollector.IO.ComPort.StopBits;
+
 public class XmlConfigParser {
 	private static Logger logger = Logger.getRootLogger();
 
 	private Document dom;
 	private String xmlFile;
-	//private String filePath = null;
-
 	private S0 s0;
 	private D0 d0;
 	private JSON json;
@@ -50,14 +51,10 @@ public class XmlConfigParser {
 		return mysql;
 	}
 
-	public XmlConfigParser(){
-		new ArrayList<XmlConfig>();
-	}
-
 	public boolean getConfig(String xmlFile) {
 		boolean healtyConfig = false;
 		this.xmlFile = xmlFile;
-		//parse the xml file and get the dom object
+
 		try {
 			parseXmlFile(xmlFile);
 			parseDocument();
@@ -66,11 +63,6 @@ public class XmlConfigParser {
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			logger.error(e.getMessage());
 		}
-
-		//get each employee element and create a Employee object
-
-		//Iterate through the list and print the data
-		//printData();
 
 		return healtyConfig;
 	}
@@ -84,24 +76,17 @@ public class XmlConfigParser {
 
 			for(int i = 0 ; i < nl.getLength();i++) {
 
-				//logger.debug(nl.item(i));
-
 				Element subElement = (Element)nl.item(i);
-
-				//logger.debug(subElement.getAttributes().getNamedItem("type"));
 
 				if(subElement.getAttribute("type").equalsIgnoreCase(type)){
 					setConfigElement(subElement, nodeName, nodeValue);
 					try{
-						// Create file
 						FileWriter fstream = new FileWriter(xmlFile);
 						BufferedWriter out = new BufferedWriter(fstream);
-
 
 						Transformer transformer = TransformerFactory.newInstance().newTransformer();
 						transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-						//initialize StreamResult with File object to save to file
 						StreamResult result = new StreamResult(new StringWriter());
 						DOMSource source = new DOMSource(dom);
 						transformer.transform(source, result);
@@ -109,10 +94,6 @@ public class XmlConfigParser {
 						String xmlString = result.getWriter().toString();
 
 						out.write(xmlString);
-
-						//System.out.print(dom.toString());
-
-						//Close the output stream
 						out.close();
 						logger.debug("updated config.xml file with new offset for S0 interface");
 					}catch (Exception e){//Catch exception if any
@@ -120,22 +101,14 @@ public class XmlConfigParser {
 					}
 				}
 			}
-
 		}
-
 		return false;
 	}
 
-
 	private void parseXmlFile(String xmlFile) throws ParserConfigurationException, SAXException, IOException{
-		//get the factory
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-
-
-		//Using factory get an instance of document builder
 		DocumentBuilder db = dbf.newDocumentBuilder();
 
-		//parse using builder to get DOM representation of the XML file
 		dom = db.parse(xmlFile);
 		logger.debug("File name: " + xmlFile);
 	}
@@ -147,9 +120,6 @@ public class XmlConfigParser {
 		if(nl != null && nl.getLength() > 0) {
 
 			for(int i = 0 ; i < nl.getLength();i++) {
-
-				//logger.debug(nl.item(i));
-
 				Element el = (Element)nl.item(i);
 
 				logger.debug(el.getAttributes().getNamedItem("type"));
@@ -175,9 +145,51 @@ public class XmlConfigParser {
 					d0 = new D0();
 					d0.setPortName(getConfigElement(el, "port"));
 					d0.setBaudRate(Integer.parseInt(getConfigElement(el, "baudrate")));
-					d0.setParity(Integer.parseInt(getConfigElement(el, "parity")));
-					d0.setDataBits(Integer.parseInt(getConfigElement(el, "databits")));
-					d0.setStopBits(Integer.parseInt(getConfigElement(el, "stopbits")));
+					switch (getConfigElement(el, "parity")) {
+					case "NONE":
+						d0.setParity(Parity.NONE);
+						break;
+					case "ODD":
+						d0.setParity(Parity.ODD);
+						break;
+					case "EVEN":
+						d0.setParity(Parity.EVEN);
+						break;
+					case "MARK":
+						d0.setParity(Parity.MARK);
+						break;
+					case "SPACE":
+						d0.setParity(Parity.SPACE);
+						break;
+					default:
+						d0.setParity(Parity.EVEN);
+						break;
+					}
+					switch (Integer.parseInt(getConfigElement(el, "databits"))) {
+					case 7:
+						d0.setDataBits(DataBits.SEVEN);
+						break;
+					case 8:
+						d0.setDataBits(DataBits.EIGHT);
+						break;
+					default:
+						d0.setDataBits(DataBits.SEVEN);
+						break;
+					}
+					switch (getConfigElement(el, "stopbits")) {
+					case "1":
+						d0.setStopBits(StopBits.ONE);
+						break;
+					case "1.5":
+						d0.setStopBits(StopBits.ONEPOINTFIVE);
+						break;
+					case "2":
+						d0.setStopBits(StopBits.TWO);
+						break;
+					default:
+						d0.setStopBits(StopBits.ONE);
+						break;
+					}
 					d0.setMaxBaudRate(Integer.parseInt(getConfigElement(el, "maxbaudrate")));
 					d0.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
 					break;
@@ -206,6 +218,7 @@ public class XmlConfigParser {
 					mysql.setHostname(getConfigElement(el, "hostname"));
 					mysql.setDatabase(getConfigElement(el, "database"));
 					mysql.setTable(getConfigElement(el, "table"));
+					mysql.setPort(Integer.parseInt(getConfigElement(el, "port")));
 					mysql.setUser(getConfigElement(el, "user"));
 					mysql.setPassword(getConfigElement(el, "password"));
 					mysql.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
@@ -246,5 +259,4 @@ public class XmlConfigParser {
 		}
 		return changedNodeValue;
 	}
-
 }

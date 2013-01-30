@@ -8,8 +8,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import DataCollector.XML.MYSQL;
 
@@ -18,7 +21,7 @@ public class MySQLAccess {
 
 	private Connection dbConnection = null;
 	private Statement statement = null;
-	private PreparedStatement preparedStatement = null;
+	//private final PreparedStatement preparedStatement = null;
 	private PreparedStatement preparedStatementSet = null;
 	private ResultSet resultSet = null;
 	private String hostName;// = "localhost";
@@ -113,39 +116,74 @@ public class MySQLAccess {
 		return pss;
 	}
 
-	public void readDataBase() throws Exception {
+	public JSONObject readDataBase(Object[] input) throws Exception {
+		JSONObject jObject = null;
+		String[] selectedInterval = new String[5];
+
+		{
+			if(input.length > 0 && input[0].toString().matches("[0-9]{4}[/:-][0-9]{2}[/:-][0-9]{2}"))
+				selectedInterval[0] = input[0].toString();
+			else
+				selectedInterval[0] = "2013-01-11";
+
+			if(input.length > 1 && input[1].toString().matches("[0-9]{2}[/:-][0-9]{2}[/:-][0-9]{2}"))
+				selectedInterval[1] = input[1].toString();
+			else
+				selectedInterval[1] = "12:00:00";
+
+			if(input.length > 2 && input[2].toString().matches("[0-9]{4}[/:-][0-9]{2}[/:-][0-9]{2}"))
+				selectedInterval[2] = input[2].toString();
+			else
+				selectedInterval[2] = "2013-01-11";
+
+			if(input.length > 3 && input[3].toString().matches("[0-9]{2}[/:-][0-9]{2}[/:-][0-9]{2}"))
+				selectedInterval[3] = input[3].toString();
+			else
+				selectedInterval[3] = "13:00:59";
+
+			if(input.length > 4 && input[4].toString().matches("[0-9]{1,2}"))
+				selectedInterval[4] = input[4].toString();
+			else
+				selectedInterval[4] = "1";
+		}
+
+		String[] intervalMask = new String[]{"00", "00", "00", "00"};
+
+		switch (selectedInterval[4]) {
+		case "60":
+			intervalMask = new String[]{"00", "00", "00", "00"};
+			break;
+		case "30":
+			intervalMask = new String[]{"00", "00", "30", "00"};
+			break;
+		case "15":
+			intervalMask = new String[]{"00", "15", "30", "45"};
+			break;
+		case "10":
+			intervalMask = new String[]{"0", "00", "00", "00"};
+			break;
+		case "5":
+			intervalMask = new String[]{"0", "5", "00", "00"};
+			break;
+		case "1":
+			intervalMask = new String[]{"", "00", "00", "00"};
+			break;
+
+		default:
+			intervalMask = new String[]{"00", "15", "30", "45"};
+			break;
+		}
+
 		try {
+
 			Class.forName("com.mysql.jdbc.Driver");
-			dbConnection = DriverManager.getConnection("jdbc:mysql://" + hostName + "/" + dataBase + "?"
-					+ "user=DataCollector&password=collect");
+			dbConnection = DriverManager.getConnection("jdbc:mysql://"
+					+ hostName + "/" + dataBase + "?" + "user=" + user
+					+ "&password=" + password);
 
-			statement = dbConnection.createStatement();	// Statements allow to issue SQL queries to the database
-			resultSet = statement.executeQuery("SELECT * FROM " + dataBaseTable);	// Result set get the result of the SQL query
-			writeResultSet(resultSet);
-
-			// PreparedStatements can use variables and are more efficient
-			preparedStatement = dbConnection.prepareStatement("INSERT INTO  " + dataBaseTable + " VALUES (default, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)");
-			// "myuser, webpage, datum, summery, COMMENTS from FEEDBACK.COMMENTS");
-			// Parameters start with 1
-			preparedStatement.setString(1, "Test");
-			preparedStatement.setString(2, "TestEmail");
-			preparedStatement.setString(3, "TestWebpage");
-			//preparedStatement.setDate(4, (java.sql.Date)("2009, 12, 11"));
-			preparedStatement.setString(5, "TestSummary");
-			preparedStatement.setString(6, "TestComment");
-			preparedStatement.executeUpdate();
-
-			preparedStatement = dbConnection.prepareStatement("SELECT myuser, webpage, datum, summery, COMMENTS from FEEDBACK.COMMENTS");
-			resultSet = preparedStatement.executeQuery();
-			writeResultSet(resultSet);
-
-			// Remove again the insert comment
-			preparedStatement = dbConnection.prepareStatement("delete from FEEDBACK.COMMENTS where myuser= ? ; ");
-			preparedStatement.setString(1, "Test");
-			preparedStatement.executeUpdate();
-
-			resultSet = statement.executeQuery("select * from " + dataBaseTable);
-			writeMetaData(resultSet);
+			statement = dbConnection.createStatement();
+			resultSet = statement.executeQuery("select * from sg where (EM_0_9_2>='" + selectedInterval[0] + "' and EM_0_9_1>='" + selectedInterval[1] + "') and (EM_0_9_2<='" + selectedInterval[2] + "' and EM_0_9_1<='" + selectedInterval[3] + "') and (EM_0_9_1 like '%:%" + intervalMask[0] + ":%' or EM_0_9_1 like '%:%" + intervalMask[1] + ":%'or EM_0_9_1 like '%:%" + intervalMask[2] + ":%'or EM_0_9_1 like '%:%" + intervalMask[3] + ":%');");
+			jObject = createJSONObject(resultSet);
 
 		} catch (Exception e) {
 			throw e;
@@ -153,38 +191,85 @@ public class MySQLAccess {
 			close();
 		}
 
+		return jObject;
 	}
 
-	private void writeMetaData(ResultSet resultSet) throws SQLException {
-		//   Now get some metadata from the database
-		// Result set get the result of the SQL query
+	private JSONObject createJSONObject(ResultSet resultSet) throws JSONException, SQLException{
+		JSONObject jObject = new JSONObject();
 
-		System.out.println("The columns in the table are: ");
+		java.util.Date dateTime = new java.util.Date();
+		SimpleDateFormat dateTimeFormater = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-		System.out.println("Table: " + resultSet.getMetaData().getTableName(1));
-		for  (int i = 1; i<= resultSet.getMetaData().getColumnCount(); i++){
-			System.out.println("Column " +i  + " "+ resultSet.getMetaData().getColumnName(i));
+		Object[] columnNames = getColumnNames(resultSet);
+		Object[][] columnValues = getColumnValues(resultSet, columnNames);
+
+		Object[][] dbMirror = new Object[columnValues.length + 1][columnNames.length];
+
+		System.arraycopy(columnNames, 0, dbMirror[0], 0, dbMirror[0].length);
+
+		for(int i=0; i<columnValues.length; i++)
+			for(int j=0; j<columnValues[i].length; j++)
+				dbMirror[i + 1][j]=columnValues[i][j];
+
+		jObject.put("timestamp", dateTimeFormater.format(dateTime));
+		Object[] tmp = new Object[dbMirror[0].length - 5];
+		System.arraycopy(dbMirror[0], 5, tmp, 0, tmp.length);
+		jObject.put("units", tmp);
+
+		for (int i = 0; i < dbMirror.length; i++) {
+			StringBuilder sb = new StringBuilder();
+			for (int j = 0; j < dbMirror[i].length; j++) {
+				int length = dbMirror[i][j].toString().length();
+				if(dbMirror[i][j].toString().length() >= 13)
+					sb.append(dbMirror[i][j].toString().substring(0, 11) + " ");
+				else
+					sb.append(dbMirror[i][j].toString());
+
+				while(length < 12)
+				{
+					sb.append(" ");
+					length++;
+				}
+				Object[] tmpArray = new Object[dbMirror[i].length - 5];
+				System.arraycopy(dbMirror[i], 5, tmpArray, 0, tmpArray.length);
+				jObject.put(dbMirror[i][2].toString() + "T" + dbMirror[i][1].toString(), tmpArray);
+			}
+			logger.debug(sb.toString());
 		}
+
+		jObject.length();
+		return jObject;
 	}
 
-	private void writeResultSet(ResultSet resultSet) throws SQLException {
-		// ResultSet is initially before the first data set
+	private Object[] getColumnNames(ResultSet resultSet) throws SQLException {
+		Object[] columns = new Object[resultSet.getMetaData().getColumnCount()];
+
+		for (int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
+			columns[i] = resultSet.getMetaData().getColumnName(i + 1);
+		}
+		return columns;
+	}
+
+	private Object[][] getColumnValues(ResultSet resultSet, Object[] columnNames) throws SQLException {
+
+		Object[][] columnValues = null;
+
+		if (resultSet.last()) {
+			columnValues = new Object[resultSet.getRow()][columnNames.length];
+			resultSet.beforeFirst();
+		}
+
 		while (resultSet.next()) {
-			// It is possible to get the columns via name
-			// also possible to get the columns via the column number
-			// which starts at 1
-			// e.g. resultSet.getSTring(2);
-			String user = resultSet.getString("myuser");
-			String website = resultSet.getString("webpage");
-			String summery = resultSet.getString("summery");
-			//Date date = resultSet.getDate("datum");
-			String comment = resultSet.getString("comments");
-			System.out.println("User: " + user);
-			System.out.println("Website: " + website);
-			System.out.println("Summery: " + summery);
-			//System.out.println("Date: " + date);
-			System.out.println("Comment: " + comment);
+
+			if(resultSet.getRow() > 0)
+			{
+
+				for (int i = 0; i < columnNames.length; i++) {
+					columnValues[resultSet.getRow() - 1][i] = resultSet.getObject((String)columnNames[i]);
+				}
+			}
 		}
+		return columnValues;
 	}
 
 	// You need to close the resultSet

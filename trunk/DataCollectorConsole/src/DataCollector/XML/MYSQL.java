@@ -5,6 +5,7 @@ public class MYSQL {
 	private String hostname;
 	private String database;
 	private String table;
+	private int port;
 	private String user;
 	private String password;
 	private int interval;
@@ -37,6 +38,14 @@ public class MYSQL {
 		this.table = table;
 	}
 
+	public synchronized int getPort() {
+		return port;
+	}
+
+	public synchronized void setPort(int port) {
+		this.port = port;
+	}
+	
 	public synchronized String getUser() {
 		return user;
 	}
