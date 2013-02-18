@@ -107,9 +107,10 @@ INSERT INTO jamis VALUES (
 	
 mysql -u root -proot
 USE logdata;
-DROP TABLE IF EXISTS sg;
-CREATE TABLE sg(
+DROP TABLE IF EXISTS sg2;
+CREATE TABLE sg2(
 	id int not null primary key auto_increment,
+	TIMESTAMP DATETIME,
 	EM_0_9_1 TIME,
 	EM_0_9_2 DATE,
 	EM_F_F DECIMAL(9),
@@ -127,12 +128,51 @@ CREATE TABLE sg(
 	HP_PAC DECIMAL(9,3),
 	HP_TOTAL_ENERGY DECIMAL(9,3)
 	);
-INSERT INTO sg VALUES (
+INSERT INTO sg2 VALUES (
 	default,
+	'12-12-07 07:08:09',
 	'07:08:09',
 	'12-12-07',
 	'100000000',
 	'100000000',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001'
+	);
+...........................................................................................................
+	
+	
+mysql -u root -proot
+USE logdata;
+DROP TABLE IF EXISTS sg3;
+CREATE TABLE sg3(
+	id int not null primary key auto_increment,
+	TIMESTAMP DATETIME,
+	EM_1_8_0 DECIMAL(9,3),
+	EM_2_8_0 DECIMAL(9,3),
+	EM_1_7_0 DECIMAL(9,3),
+	EM_2_7_0 DECIMAL(9,3),
+	EM_3_7_0 DECIMAL(9,3),
+	EM_4_7_0 DECIMAL(9,3),
+	PV_PAC DECIMAL(9,3),
+	PV_TOTAL_ENERGY DECIMAL(9,3),
+	PV_YEAR_ENERGY DECIMAL(9,3),
+	PV_DAY_ENERGY DECIMAL(9,3),
+	HP_PAC DECIMAL(9,3),
+	HP_TOTAL_ENERGY DECIMAL(9,3)
+	);
+INSERT INTO sg3 VALUES (
+	default,
+	'12-12-07 07:08:09',
 	'100000.001',
 	'100000.001',
 	'100000.001',
