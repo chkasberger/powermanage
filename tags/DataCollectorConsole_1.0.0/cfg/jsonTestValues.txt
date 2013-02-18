@@ -1,0 +1,49 @@
+{
+	"Head" : {
+		"RequestArguments" : {
+			"Scope" : "System"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2012-11-14T22:10:51+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"PAC" : {
+				"Unit" : "W",
+				"Values" : {
+					"1" : 321,
+					"2" : 356,
+					"3" : 355
+				}
+			},
+			"DAY_ENERGY" : {
+				"Unit" : "Wh",
+				"Values" : {
+					"1" : 6676,
+					"2" : 6726,
+					"3" : 6000
+				}
+			},
+			"YEAR_ENERGY" : {
+				"Unit" : "Wh",
+				"Values" : {
+					"1" : 1096827,
+					"2" : 1086195,
+					"3" : 1032000
+				}
+			},
+			"TOTAL_ENERGY" : {
+				"Unit" : "Wh",
+				"Values" : {
+					"1" : 1096827,
+					"2" : 1086194,
+					"3" : 1032000
+				}
+			}
+		}
+	}
+}
