@@ -1,4 +1,4 @@
-package DataCollector;
+package Main;
 
 import gnu.io.PortInUseException;
 
@@ -15,12 +15,10 @@ import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.SimpleLayout;
 import org.json.JSONObject;
 
+import DataCollector.JUtil;
 import DataCollector.DB.MySQLAccess;
 import DataCollector.IO.ComPort;
 import DataCollector.IO.ComPortEvent;
@@ -70,7 +68,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		setup();
+		JUtil.setupLogger();
 		config(args);
 		//config(new String[]{"./jar/"});
 		createThreads();
@@ -157,17 +155,7 @@ public class Main {
 		DBThread.start();
 	}
 
-	private static void config(String[] args) {
-		if(config.getConfig(args[0] + "config.xml")){
-			logger.debug("found valid config file");
-		} else if (parseArgs(args)){
-			logger.debug("no valid config file available; try to use startup arguments");
-		} else{
-			logger.error("No valid input found!");
-		}
-	}
-
-	private static void setup() {
+/*	private static void setup() {
 		Level logLevel;
 		//logLevel = Level.INFO;
 		logLevel = Level.DEBUG;
@@ -179,6 +167,21 @@ public class Main {
 			logger.addAppender(consoleAppender);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
+		}
+	}
+*/
+	private static void config(String[] args) {
+		if(args.length > 0){
+			//read "config.xml"
+			if(config.getConfig(args[0])){
+				logger.debug("found valid config file");
+			} else if(parseArgs(args)){
+				logger.debug("no valid config file available; try to use startup arguments");
+				parseArgs(args);
+			} else{
+				logger.error("No valid input found! Try dev environment location");
+				//parseArgs(new String[]{"./jar/config.xml"});					
+			}		
 		}
 	}
 
@@ -222,7 +225,6 @@ public class Main {
 
 			//String[] singleOption = new String[]{"0"};
 			System.out.print("enter port + options:\r\n\t");
-
 
 			for (String string : singleOption) {
 				logger.debug(string);
@@ -571,7 +573,7 @@ public class Main {
 						Object[] input = inputLine.split("[ T]");
 						JSONObject jObject = null;
 						try {
-							jObject = mysqlAccess.readDataBase(input);
+							jObject = mysqlAccess.Get(input);
 							out.println(jObject.toString());
 						} catch (Exception e) {
 							e.printStackTrace();

@@ -1,86 +1,96 @@
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-//import java.text.SimpleDateFormat;
+
+//import org.apache.commons.dbutils.*;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.json.JSONObject;
+
+import DataCollector.JUtil;
+import DataCollector.DB.MySQLAccess;
+import DataCollector.XML.*;
 
 public class Client {
 
-	static Socket socket;
+	static Logger logger = Logger.getRootLogger();
+	//static Socket socket;
 	static BufferedReader in;
-	static PrintWriter out;
+	static PrintWriter out;	
+	static XmlConfigParser config = new XmlConfigParser();
+	
 	/**
 	 * @param args
 	 * @throws InterruptedException 
 	 * @throws IOException 
 	 * @throws MalformedURLException 
 	 */
-	public static void main(String[] args) throws InterruptedException, MalformedURLException, IOException {
+	public static void main(String[] args){
 		
-		//Thread DBThread = null;
-
+		JUtil.setupLogger();
+		logger.setLevel(Level.DEBUG);
+		logger.debug("app startet");
+		
+		
+		config(args);
+		
 		//java.util.Date now = new java.util.Date();
         //SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         //System.out.println(format.format(now));
 
-        String host;
-        host= "localhost";
-		//host = "raspberrypi";
-		//host = "10.0.0.3";
-        //host = "ziontrain.no-ip.org";
-        //host = "194.166.134.191";
-        Socket echoSocket = null;
-        PrintWriter out = null;
-        BufferedReader in = null;
-
-        try {
-            
-        	//echoSocket = new Socket(host, 4444);
-        	echoSocket = new Socket(host, 56665);
-        	//echoSocket.setSoTimeout(5000);
-            out = new PrintWriter(echoSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(
-                                        echoSocket.getInputStream()));
-        } catch (UnknownHostException e) {
-            System.err.println("Don't know about host: " + host + "!");
-            System.exit(1);
-        } catch (IOException e) {
-            System.err.println("Couldn't get I/O for "
-                               + "the connection to: " + host + "!");
-            System.out.println(e.getMessage());
-            System.exit(1);
-        }
-
-		BufferedReader stdIn = new BufferedReader(
-	                                   new InputStreamReader(System.in));
-		String userInput;
+		MySQLAccess mySQLAccess = new MySQLAccess(config.getMysql());
+		
+		int count = 0;		
+		while(new com.fastcgi.FCGIInterface().FCGIaccept()>= 0) {
+			count ++;
+			logger.debug("ina di loop" + count);
+		   
+			//String input = System.getProperty("FCGI_STDIN");
+			//System.out.println("Content-type: text/html\n\n");
+			System.out.println("Content-type: application/json\r\n");
+			System.out.println("<html>");
+			System.out.println("<head><TITLE>FastCGI-Hello Java stdio</TITLE></head>");
+			System.out.println("<body>");
+			System.out.println("<H3>FastCGI-JSON</H3>");
+		   	//System.out.println("request number " + count + " running on host " + System.getProperty("SERVER_NAME"));
+			
+			Object[] input = null; 
+			JSONObject jObject = null;
+			
+			try {
+				//System.out.println(input);
+				//System.getProperties().list(System.out);
+				String queryString = System.getProperty("QUERY_STRING");
+				input = queryString.split("[ _T]");
+				//foo = mySQLAccess.Get(new Object[]{"2013:02:10", "12:00:00", "2013:02:10", "13:00:59", "15"}).toString();
+				jObject = mySQLAccess.Get(input);
+				//logger.debug("Array: ");
+		   		//jArray = mySQLAccess.GetJSONArray(input);
+				
+				//System.out.println(jObject);
+		   		//logger.debug("Array: " + jArray);
+		   		//System.out.println("Array: " + jArray);
+				//System.out.flush();
+		   		System.out.println(jObject);
+				System.out.flush();
+				logger.debug(input[0] + " " + input[1] + " " + input[2] + " " + input[3]);
+				logger.debug(jObject);
+			
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				logger.error(e.getMessage());
+					
+				//e1.printStackTrace();
+			}
+		   	System.out.println("</body>");
+		   	System.out.println("</html>");		 
+	   }        	    		
+	}
 	
+	private static void config(String[] args) {
 		if(args.length > 0){
-			StringBuilder sb = new StringBuilder();
-			for (String str : args) {
-				sb.append(str + " ");
-			}
-			String argument = sb.toString();
-			out.println(argument);
-		    System.out.println(in.readLine());		    
-		    System.exit(0);
+			config.getConfig(args[0]);	
 		}
-			 
-		while ((userInput = stdIn.readLine()) != null) {
-			if(userInput.equals("exit")){
-				System.exit(0);
-				//System.out.println("exiting 2");
-			}
-		    out.println(userInput);
-		    System.out.println(in.readLine());
-		}
-	
-		out.close();
-		in.close();
-		stdIn.close();
-		echoSocket.close();			    		
 	}
 }

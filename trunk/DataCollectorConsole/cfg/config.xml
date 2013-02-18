@@ -5,7 +5,7 @@
 		<interval>60</interval>
     </interface>
     <interface type="D0">
-		<port>/dev/ttyUSB0</port>
+		<port>COM5</port>
 		<baudrate>300</baudrate>
 		<parity>2</parity>
 		<databits>7</databits>

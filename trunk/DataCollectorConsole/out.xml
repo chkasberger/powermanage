@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<config>
+    <interface type="JSON">
+    	<url>http://10.0.0.31/solar_api/GetInverterRealtimeData.cgi?Scope=System</url>	
+		<interval>60</interval>
+    </interface>
+    <interface type="D0">
+		<port>/dev/ttyUSB0</port>
+		<baudrate>300</baudrate>
+		<parity>2</parity>
+		<databits>7</databits>
+		<stopbits>1</stopbits>
+		<maxbaudrate>2400</maxbaudrate>
+		<interval>60</interval>
+	</interface>
+    <interface type="S0">
+		<ticksperkwh>800</ticksperkwh>
+		<offset>2000</offset>
+		<gpiopin>GPIO_00</gpiopin>
+		<pullresistance>PULL_DOWN</pullresistance>
+		<interval>60</interval>
+	</interface>
+    <interface type="DB">
+		<hostname>localhost</hostname>
+		<database>logdata</database>
+		<table>xamis</table>
+		<user>DataCollector</user>
+		<password>collect</password>
+		<interval>60</interval>
+	</interface>
+</config>
