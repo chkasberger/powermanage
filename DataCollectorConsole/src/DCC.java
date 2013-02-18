@@ -1,5 +1,3 @@
-package Main;
-
 import gnu.io.PortInUseException;
 
 import java.io.BufferedReader;
@@ -8,8 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
@@ -39,7 +35,7 @@ import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
-public class Main {
+public class DCC {
 	final static Logger logger = Logger.getRootLogger();
 	static Lock lock = new ReentrantLock();
 	static MySQLAccess DB;
@@ -68,7 +64,8 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		JUtil.setupLogger();
+		JUtil.setupLogger(args[1]);
+		
 		config(args);
 		//config(new String[]{"./jar/"});
 		createThreads();
@@ -175,138 +172,11 @@ public class Main {
 			//read "config.xml"
 			if(config.getConfig(args[0])){
 				logger.debug("found valid config file");
-			} else if(parseArgs(args)){
-				logger.debug("no valid config file available; try to use startup arguments");
-				parseArgs(args);
 			} else{
 				logger.error("No valid input found! Try dev environment location");
 				//parseArgs(new String[]{"./jar/config.xml"});					
 			}		
 		}
-	}
-
-	private static boolean parseArgs(String[] args) {
-		boolean valid = true;
-		String[] singleOption;
-		ArrayList<String> portList = ComPort.portList();
-		String[][] portListArray = new String[portList.size()][2];
-
-		System.out.print("available serial ports:\r\n");
-		for (int i = 0; i < portList.size(); i++) {
-			portListArray[i][0] = String.valueOf(i);
-			portListArray[i][1] = portList.get(i);
-
-			System.out.println("\t" + portListArray[i][0] + "=" + portListArray[i][1]);
-		}
-
-		if(portList.size() > 0)
-		{
-			if(args.length > 0)
-			{
-				singleOption = args;
-				logger.debug("command line arguments found");
-			}
-			else
-			{
-				System.out.print("usage:\t[port] + [options]\r\n" +
-						"options:\r\n" +
-						"\t-b [baud{300(default)|600|1200|2400|4800|9600|19200|...}]\r\n" +
-						"\t-p [parity{0=none(default),1=odd,2=even}]\r\n" +
-						"\t-d [data{7(default)|8}]\r\n" +
-						"\t-s [stop{1(default)}|2|3(=1.5)]\r\n" +
-						"\t-t [type{0=AMIS(default)|1=Froeling}]\r\n" +
-						"\t-c [cycle{time in seconds}]\r\n" +
-						"example:\r\t0 -b 19200 -p 0 -s 2 -t 0 -c 60");
-
-				Scanner in = new Scanner(System.in);
-				String options = in.nextLine();
-				singleOption = options.split(" -");
-			}
-
-			//String[] singleOption = new String[]{"0"};
-			System.out.print("enter port + options:\r\n\t");
-
-			for (String string : singleOption) {
-				logger.debug(string);
-
-				if (string.matches("[0-9]{1,3}")) // port index
-				{
-					portName = portListArray[Integer.parseInt(string)][1];
-					logger.debug("selected port: " + portName);
-				}
-				else if(string.matches("[0-9]?[a-zA-Z]{1}[ ]{1}[0-9]+"))
-				{
-					if(string.startsWith("b")) // port index
-					{
-						int baud = Integer.parseInt(string.substring(2));
-						if(baud % 300 == 0)
-						{
-							baudRate = baud;
-							logger.debug("baudrate is set to " + baudRate.toString());
-						}
-						else
-							logger.debug("baudrate is not multiple of 300!");
-					}
-
-					if(string.startsWith("p")) //parity
-					{
-						switch(Integer.parseInt(string.substring(2))){
-						case 0: parityBit = ComPort.Parity.NONE; break;
-						case 1: parityBit = ComPort.Parity.ODD; break;
-						case 2: parityBit = ComPort.Parity.EVEN; break;
-						}
-
-						logger.debug("parity is set to " + parityBit.toString());
-					}
-					if(string.startsWith("d")) // data bits
-					{
-						switch(Integer.parseInt(string.substring(2))){
-						case 7: dataBits = ComPort.DataBits.SEVEN; break;
-						case 8: dataBits = ComPort.DataBits.EIGHT; break;
-						}
-						logger.debug("databit is set to " + dataBits.toString());
-					}
-					if(string.startsWith("s")) // stop bits
-					{
-						switch(Integer.parseInt(string.substring(2))){
-						case 1: stopBits = ComPort.StopBits.ONE; break;
-						case 3: stopBits = ComPort.StopBits.ONEPOINTFIVE; break;
-						case 2: stopBits = ComPort.StopBits.TWO; break;
-						}
-						logger.debug("stopbit is set to " + stopBits.toString());
-					}
-					if(string.startsWith("t")) // hardware type
-					{
-						switch(Integer.parseInt(string.substring(2))){
-						case 0: hardwareType = Hardware.AMIS; break;
-						case 1: hardwareType = Hardware.FROELING; break;
-						}
-						logger.debug("hardware is set to " + hardwareType.toString());
-					}
-					if(string.startsWith("c")) // interval
-					{
-						try{
-							interval = Integer.parseInt(string.substring(2));
-							logger.debug("interval is set to " + interval.toString());
-						}
-						catch(NumberFormatException nfe){
-							logger.info("option must be an integer value; used default value: " + interval.toString());
-						}
-					}
-				}
-				else
-				{
-					logger.info("Wrong or rather unknown option: " + string);
-					valid = false;
-				}
-			}
-		}
-		else
-		{
-			System.out.println("No valid serial port found!");
-		}
-
-		return valid;
 	}
 
 	private static int flag = 0;

@@ -26,11 +26,43 @@ public class JUtil {
 		return functionName;
 	}
 
-	public static void setupLogger() {
-		Logger logger = Logger.getRootLogger();		
+	public static void setupLogger(String _logLevel) {
+		Logger logger = Logger.getRootLogger();	
 		Level logLevel;
+		if(_logLevel != null)
+		{
+			switch (_logLevel.toUpperCase()) {
+			case "ALL":
+				logLevel = Level.ALL;
+				break;
+			case "DEBUG":
+				logLevel = Level.DEBUG;
+				break;
+			case "INFO":
+				logLevel = Level.INFO;
+				break;
+			case "WARN":
+				logLevel = Level.WARN;
+				break;
+			case "ERROR":
+				logLevel = Level.ERROR;
+				break;
+			case "FATAL":
+				logLevel = Level.FATAL;
+				break;
+			case "OFF":
+				logLevel = Level.OFF;
+				break;
+			default:
+				logLevel = Level.ERROR;			
+				break;
+			}
+		}
+		else{
+			logLevel = Level.OFF;						
+		}
 		//logLevel = Level.INFO;
-		logLevel = Level.DEBUG;
+		//logLevel = Level.DEBUG;
 		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
 		try {
 			SimpleLayout layout = new SimpleLayout();
