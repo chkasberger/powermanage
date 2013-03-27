@@ -1,3 +1,7 @@
+/*******************************************************************************
+ * Copyright (c) 2013 Christian Kasberger.
+ * All rights reserved. This program and the accompanying materials are made available for non comercial use!
+ *******************************************************************************/
 package DataCollector.XML;
 
 import com.pi4j.io.gpio.Pin;
