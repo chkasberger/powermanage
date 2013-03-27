@@ -1,3 +1,7 @@
+/*******************************************************************************
+ * Copyright (c) 2013 Christian Kasberger.
+ * All rights reserved. This program and the accompanying materials are made available for non comercial use!
+ *******************************************************************************/
 package DataCollector.PV;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
