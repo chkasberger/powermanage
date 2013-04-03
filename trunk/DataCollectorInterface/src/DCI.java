@@ -37,12 +37,16 @@ public class DCI {
 		while(new com.fastcgi.FCGIInterface().FCGIaccept()>= 0) {
 
 			System.out.println("Content-type: application/json\r\n");
-			System.out.println("<html>");
-			System.out.println("<head><TITLE>FastCGI-Hello Java stdio</TITLE></head>");
-			System.out.println("<body>");
-			System.out.println("<H3>FastCGI-JSON</H3>");
-		   	//System.out.println("request number " + count + " running on host " + System.getProperty("SERVER_NAME"));
+			//System.out.println("Content-type: text/plain\r\n");
 			
+			/*
+			System.out.println(
+					"<!DOCTYPE html>" +
+					"<html lang=\"en\">" +
+					"<head><TITLE>db query</TITLE></head>" +
+					"<body>"
+					);
+			*/
 			Object[] input = null; 
 			JSONObject jObject = null;
 			
@@ -64,8 +68,11 @@ public class DCI {
 					
 				//e1.printStackTrace();
 			}
-		   	System.out.println("</body>");
-		   	System.out.println("</html>");		 
+		   	/*
+		   	System.out.println(
+		   			"</body>" +
+		   			"</html>");
+		   			*/
 	   }        	    		
 	}
 }
