@@ -172,7 +172,7 @@ public class MySQLAccess {
 			statement = dbConnection.createStatement();
 		
 			resultSet = statement.executeQuery
-					("SELECT * FROM sg3 WHERE TIMESTAMP BETWEEN '" + 
+					("SELECT * FROM " + dataBaseTable + " WHERE TIMESTAMP BETWEEN '" + 
 							selectedInterval[0][0] + " " + selectedInterval[0][1] + "' AND '" + 
 							selectedInterval[0][2] + " " + selectedInterval[0][3] + 
 							"' and (Time(TIMESTAMP) like '%:%" + selectedInterval[1][0] + ":%' " +
@@ -202,6 +202,7 @@ public class MySQLAccess {
 		logger.debug(JUtil.getTimeStamp());		
 		
 		jObject.put("timestamp", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date()));
+		
 		//jObject
 
 		Object[] column = new Object[resultSet.getMetaData().getColumnCount()];
@@ -236,6 +237,7 @@ public class MySQLAccess {
 					}
 					//jObject.put(column[1].toString(), new JSONArray().put(column));	
 					jArray.put(column);
+					//jArray.put("<br>");
 					//jArray.put(JSONObject.wrap(resultSet));
 					column = null;
 				}
