@@ -1,0 +1,58 @@
+Registerbeschreibung;		OBISKennung;	Format;	Einheit;	Erzeugung/Erl�uterung
+Energie A+ Tariflos;				1.8.0;	999999.999;	kWh;	1.8.1 bis 1.8.6 summieren
+Energie A- Tariflos;				2.8.0;	999999.999;	kWh;	2.8.1 bis 2.8.6 summieren
+aktuelle Uhrzeit;					0.9.1;	23:59:59;			Uhrenbaustein
+aktuelles Datum;					0.9.2;	99-12-31;			Uhrenbaustein
+momentane Wirkleistung P+;			1.7.0;	99.999;		kW;		Messsystem
+momentane Wirkleistung P-;			2.7.0;	99.999;		kW;		Messsystem
+momentane Blindleistung Q+;			3.7.0;	99.999;		kvAr;	Messsystem
+momentane Blindleistung Q-;			4.7.0;	99.999;		kvAr;	Messsystem
+
+...........................................................................................................
+
+mysql -u root -proot
+DROP DATABASE IF EXISTS logdata;
+CREATE DATABASE logdata;
+
+mysql -u root -proot
+USE logdata;
+DROP TABLE IF EXISTS sg3;
+CREATE TABLE sg3(
+	id int not null primary key auto_increment,
+	TIMESTAMP DATETIME,
+	EM_1_8_0 DECIMAL(9,3),
+	EM_2_8_0 DECIMAL(9,3),
+	EM_1_7_0 DECIMAL(9,3),
+	EM_2_7_0 DECIMAL(9,3),
+	EM_3_7_0 DECIMAL(9,3),
+	EM_4_7_0 DECIMAL(9,3),
+	PV_PAC DECIMAL(9,3),
+	PV_TOTAL_ENERGY DECIMAL(9,3),
+	PV_YEAR_ENERGY DECIMAL(9,3),
+	PV_DAY_ENERGY DECIMAL(9,3),
+	HP_PAC DECIMAL(9,3),
+	HP_TOTAL_ENERGY DECIMAL(9,3)
+	);
+INSERT INTO sg3 VALUES (
+	default,
+	'12-12-07 07:08:09',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001'
+	);
+
+...........................................................................................................
+
+DROP USER DataCollector@localhost;
+CREATE USER DataCollector IDENTIFIED BY 'collect'; 
+GRANT USAGE ON *.* TO DataCollector@localhost IDENTIFIED BY 'collect'; 
+GRANT ALL PRIVILEGES ON logdata.* to DataCollector@localhost;
