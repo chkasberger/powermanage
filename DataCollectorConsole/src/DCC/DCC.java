@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Christian Kasberger.
  * All rights reserved. This program and the accompanying materials are made available for non comercial use!
  *******************************************************************************/
+package DCC;
+
 import gnu.io.PortInUseException;
 
 import java.io.BufferedReader;
@@ -19,18 +21,10 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import DataCollector.JUtil;
-import DataCollector.DB.MySQLAccess;
-import DataCollector.IO.ComPort;
-import DataCollector.IO.ComPortEvent;
-import DataCollector.IO.ComPortEventListener;
-import DataCollector.PV.PV;
-import DataCollector.PV.PVEvent;
-import DataCollector.PV.PVEventListener;
-import DataCollector.XML.D0;
-import DataCollector.XML.JSON;
-import DataCollector.XML.MYSQL;
-import DataCollector.XML.S0;
-import DataCollector.XML.XmlConfigParser;
+import DataCollector.DB.*;
+import DataCollector.IO.*;
+import DataCollector.PV.*;
+import DataCollector.XML.*;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
@@ -290,7 +284,7 @@ public class DCC {
 	private static void createTaskD0(final D0 d0) {
 		final ComPort port = new ComPort();
 		try {
-			port.connect(d0.getPortName(), d0.getBaudRate(), d0.getParity(),
+			port.connect(d0.getPortName(), d0.getBaudRate(), d0.getMaxBaudRate(), d0.getParity(),
 					d0.getDataBits(), d0.getStopBits());
 		} catch (PortInUseException e) {
 			logger.error(e.getMessage());
