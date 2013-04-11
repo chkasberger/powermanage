@@ -17,12 +17,12 @@ import org.apache.log4j.SimpleLayout;
 
 /**
  * @author User
- *
+ * 
  */
 public class JUtil {
-	
-	//Logger logger = Logger.getRootLogger();
-	
+
+	// Logger logger = Logger.getRootLogger();
+
 	public static String getMethodName(int stack) {
 		String functionName;
 		functionName = (new Exception().getStackTrace()[stack].getClassName()
@@ -31,10 +31,9 @@ public class JUtil {
 	}
 
 	public static void setupLogger(String _logLevel) {
-		Logger logger = Logger.getRootLogger();	
+		Logger logger = Logger.getRootLogger();
 		Level logLevel;
-		if(_logLevel != null)
-		{
+		if (_logLevel != null) {
 			switch (_logLevel.toUpperCase()) {
 			case "ALL":
 				logLevel = Level.ALL;
@@ -58,15 +57,14 @@ public class JUtil {
 				logLevel = Level.OFF;
 				break;
 			default:
-				logLevel = Level.ERROR;			
+				logLevel = Level.ERROR;
 				break;
 			}
+		} else {
+			logLevel = Level.OFF;
 		}
-		else{
-			logLevel = Level.OFF;						
-		}
-		//logLevel = Level.INFO;
-		//logLevel = Level.DEBUG;
+		// logLevel = Level.INFO;
+		// logLevel = Level.DEBUG;
 		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
 		try {
 			SimpleLayout layout = new SimpleLayout();
@@ -77,22 +75,21 @@ public class JUtil {
 			System.out.println(e.getMessage());
 		}
 	}
-	
-	public static String getTimeStamp(){
+
+	public static String getTimeStamp() {
 		SimpleDateFormat dateTimeFormater = new SimpleDateFormat("ss:SSS");
-		return (dateTimeFormater.format(new java.util.Date().getTime()));		
+		return (dateTimeFormater.format(new java.util.Date().getTime()));
 	}
-	public class BufferedFileWriter
-	{
+
+	public class BufferedFileWriter {
 		private final File file;
 		private FileWriter fileWritter;
 		private final BufferedWriter bufferWritter;
 
-		public BufferedFileWriter(String fileName) throws IOException
-		{
+		public BufferedFileWriter(String fileName) throws IOException {
 			file = new File(fileName);
 
-			if(!file.exists()){
+			if (!file.exists()) {
 				try {
 					file.createNewFile();
 				} catch (IOException e) {
@@ -102,7 +99,7 @@ public class JUtil {
 			}
 
 			try {
-				fileWritter = new FileWriter(file.getName(),true);
+				fileWritter = new FileWriter(file.getName(), true);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -110,15 +107,13 @@ public class JUtil {
 			bufferWritter = new BufferedWriter(fileWritter);
 		}
 
-		public void write(String value) throws IOException
-		{
+		public void write(String value) throws IOException {
 			bufferWritter.write(value);
 		}
 
-		public void writeln(String value) throws IOException
-		{
+		public void writeln(String value) throws IOException {
 			bufferWritter.write(value + "\r\n");
 		}
 	}
 }
-//http://www.mayor.de/lian98/doc.de/html/g_iec62056_struct.htm
+// http://www.mayor.de/lian98/doc.de/html/g_iec62056_struct.htm

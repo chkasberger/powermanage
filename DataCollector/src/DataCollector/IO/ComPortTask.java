@@ -18,9 +18,11 @@ public class ComPortTask extends TimerTask {
 
 	/**
 	 * Constructs the object, sets the string to be output in function run()
+	 * 
 	 * @param str
 	 */
-	public ComPortTask(ComPort _Port, Object portName, Object baudRate, Object parity, Object dataBits, Object stopBits) {
+	public ComPortTask(ComPort _Port, Object portName, Object baudRate,
+			Object parity, Object dataBits, Object stopBits) {
 		this.portName = portName;
 		this.baudRate = baudRate;
 		this.parity = parity;
@@ -37,13 +39,13 @@ public class ComPortTask extends TimerTask {
 		try {
 			Port.portSettings(portName, baudRate, parity, dataBits, stopBits);
 
-			Port.out.write(new byte[] {0x2f, 0x3f, 0x21, 0x0d, 0x0a});
+			Port.out.write(new byte[] { 0x2f, 0x3f, 0x21, 0x0d, 0x0a });
 			Port.out.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		//System.out.println(_objectName + " - Current time: " + current_time);
+		// System.out.println(_objectName + " - Current time: " + current_time);
 	}
 }

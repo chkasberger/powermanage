@@ -29,7 +29,6 @@ import DataCollector.IO.ComPort.DataBits;
 import DataCollector.IO.ComPort.Parity;
 import DataCollector.IO.ComPort.StopBits;
 
-
 public class XmlConfigParser {
 	private static Logger logger = Logger.getRootLogger();
 
@@ -72,27 +71,29 @@ public class XmlConfigParser {
 		return healtyConfig;
 	}
 
-	public boolean setConfig(String type, String nodeName, String nodeValue){
+	public boolean setConfig(String type, String nodeName, String nodeValue) {
 
 		Element rootElement = dom.getDocumentElement();
 
 		NodeList nl = rootElement.getElementsByTagName("interface");
-		if(nl != null && nl.getLength() > 0) {
+		if (nl != null && nl.getLength() > 0) {
 
-			for(int i = 0 ; i < nl.getLength();i++) {
+			for (int i = 0; i < nl.getLength(); i++) {
 
-				Element subElement = (Element)nl.item(i);
+				Element subElement = (Element) nl.item(i);
 
-				if(subElement.getAttribute("type").equalsIgnoreCase(type)){
+				if (subElement.getAttribute("type").equalsIgnoreCase(type)) {
 					setConfigElement(subElement, nodeName, nodeValue);
-					try{
+					try {
 						FileWriter fstream = new FileWriter(xmlFile);
 						BufferedWriter out = new BufferedWriter(fstream);
 
-						Transformer transformer = TransformerFactory.newInstance().newTransformer();
+						Transformer transformer = TransformerFactory
+								.newInstance().newTransformer();
 						transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-						StreamResult result = new StreamResult(new StringWriter());
+						StreamResult result = new StreamResult(
+								new StringWriter());
 						DOMSource source = new DOMSource(dom);
 						transformer.transform(source, result);
 
@@ -101,7 +102,7 @@ public class XmlConfigParser {
 						out.write(xmlString);
 						out.close();
 						logger.debug("updated config.xml file with new offset for S0 interface");
-					}catch (Exception e){//Catch exception if any
+					} catch (Exception e) {// Catch exception if any
 						System.err.println("Error: " + e.getMessage());
 					}
 				}
@@ -110,7 +111,8 @@ public class XmlConfigParser {
 		return false;
 	}
 
-	private void parseXmlFile(String xmlFile) throws ParserConfigurationException, SAXException, IOException{
+	private void parseXmlFile(String xmlFile)
+			throws ParserConfigurationException, SAXException, IOException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 
@@ -118,14 +120,14 @@ public class XmlConfigParser {
 		logger.debug("File name: " + xmlFile);
 	}
 
-	private void parseDocument(){
+	private void parseDocument() {
 		Element rootElement = dom.getDocumentElement();
 
 		NodeList nl = rootElement.getElementsByTagName("interface");
-		if(nl != null && nl.getLength() > 0) {
+		if (nl != null && nl.getLength() > 0) {
 
-			for(int i = 0 ; i < nl.getLength();i++) {
-				Element el = (Element)nl.item(i);
+			for (int i = 0; i < nl.getLength(); i++) {
+				Element el = (Element) nl.item(i);
 
 				logger.debug(el.getAttributes().getNamedItem("type"));
 
@@ -135,7 +137,8 @@ public class XmlConfigParser {
 							+ getConfigElement(el, "url"));
 					json = new JSON();
 					json.setUrl(getConfigElement(el, "url"));
-					json.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
+					json.setInterval(Integer.parseInt(getConfigElement(el,
+							"interval")));
 					break;
 				case "D0":
 					logger.debug("found D0 interface type\r\n\t"
@@ -149,7 +152,8 @@ public class XmlConfigParser {
 
 					d0 = new D0();
 					d0.setPortName(getConfigElement(el, "port"));
-					d0.setBaudRate(Integer.parseInt(getConfigElement(el, "baudrate")));
+					d0.setBaudRate(Integer.parseInt(getConfigElement(el,
+							"baudrate")));
 					switch (getConfigElement(el, "parity")) {
 					case "NONE":
 						d0.setParity(Parity.NONE);
@@ -195,8 +199,10 @@ public class XmlConfigParser {
 						d0.setStopBits(StopBits.ONE);
 						break;
 					}
-					d0.setMaxBaudRate(Integer.parseInt(getConfigElement(el, "maxbaudrate")));
-					d0.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
+					d0.setMaxBaudRate(Integer.parseInt(getConfigElement(el,
+							"maxbaudrate")));
+					d0.setInterval(Integer.parseInt(getConfigElement(el,
+							"interval")));
 					break;
 				case "S0":
 					logger.debug("--> found S0 interface type\r\n\t"
@@ -206,11 +212,14 @@ public class XmlConfigParser {
 							+ getConfigElement(el, "pullresistance") + "\r\n\t"
 							+ getConfigElement(el, "interval"));
 					s0 = new S0();
-					s0.setTicksPerKwh(Double.parseDouble(getConfigElement(el, "ticksperkwh")));
-					s0.setOffset(Double.parseDouble(getConfigElement(el, "offset")));
+					s0.setTicksPerKwh(Double.parseDouble(getConfigElement(el,
+							"ticksperkwh")));
+					s0.setOffset(Double.parseDouble(getConfigElement(el,
+							"offset")));
 					s0.setGpioPin(getConfigElement(el, "gpiopin"));
 					s0.setPullResistance(getConfigElement(el, "pullresistance"));
-					s0.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
+					s0.setInterval(Integer.parseInt(getConfigElement(el,
+							"interval")));
 					break;
 				case "DB":
 					logger.debug("--> found DB interface type\r\n\t"
@@ -223,10 +232,12 @@ public class XmlConfigParser {
 					mysql.setHostname(getConfigElement(el, "hostname"));
 					mysql.setDatabase(getConfigElement(el, "database"));
 					mysql.setTable(getConfigElement(el, "table"));
-					mysql.setPort(Integer.parseInt(getConfigElement(el, "port")));
+					mysql.setPort(Integer
+							.parseInt(getConfigElement(el, "port")));
 					mysql.setUser(getConfigElement(el, "user"));
 					mysql.setPassword(getConfigElement(el, "password"));
-					mysql.setInterval(Integer.parseInt(getConfigElement(el, "interval")));
+					mysql.setInterval(Integer.parseInt(getConfigElement(el,
+							"interval")));
 					break;
 
 				default:
@@ -240,24 +251,24 @@ public class XmlConfigParser {
 		String textVal = null;
 		NodeList nl = el.getElementsByTagName(tagName);
 
-		if(nl != null && nl.getLength() > 0) {
-			Element ele = (Element)nl.item(0);
+		if (nl != null && nl.getLength() > 0) {
+			Element ele = (Element) nl.item(0);
 			textVal = ele.getFirstChild().getNodeValue();
 		}
 
 		return textVal;
 	}
 
-	private boolean setConfigElement(Element el, String tagName, String nodeValue) {
+	private boolean setConfigElement(Element el, String tagName,
+			String nodeValue) {
 		boolean changedNodeValue = true;
 		NodeList nl = el.getElementsByTagName(tagName);
 
-		if(nl != null && nl.getLength() > 0) {
-			Element ele = (Element)nl.item(0);
-			try{
+		if (nl != null && nl.getLength() > 0) {
+			Element ele = (Element) nl.item(0);
+			try {
 				ele.getFirstChild().setNodeValue(nodeValue);
-			}
-			catch(DOMException ex){
+			} catch (DOMException ex) {
 				logger.debug(ex.getMessage());
 				changedNodeValue = false;
 			}

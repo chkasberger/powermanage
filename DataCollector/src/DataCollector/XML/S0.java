@@ -16,7 +16,7 @@ public class S0 {
 	private PinPullResistance pullResistance = PinPullResistance.PULL_DOWN;
 	private int interval = 60;
 
-	public S0(){
+	public S0() {
 
 	}
 

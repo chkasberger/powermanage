@@ -4,10 +4,10 @@
  *******************************************************************************/
 package DataCollector.XML;
 
+import gnu.io.SerialPort;
 import DataCollector.IO.ComPort.DataBits;
 import DataCollector.IO.ComPort.Parity;
 import DataCollector.IO.ComPort.StopBits;
-import gnu.io.SerialPort;
 
 public class D0 {
 	private SerialPort serialPort;
@@ -20,7 +20,7 @@ public class D0 {
 	private int maxBaudRate = 9600;
 	private int interval = 60;
 
-	public D0(){
+	public D0() {
 
 	}
 

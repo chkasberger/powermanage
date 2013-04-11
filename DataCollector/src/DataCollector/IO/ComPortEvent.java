@@ -9,10 +9,9 @@ package DataCollector.IO;
 
 import java.util.EventObject;
 
-
 /**
  * @author Kasberger.Christian
- *
+ * 
  */
 public class ComPortEvent extends EventObject {
 
@@ -26,4 +25,3 @@ public class ComPortEvent extends EventObject {
 		// TODO Auto-generated constructor stub
 	}
 }
-

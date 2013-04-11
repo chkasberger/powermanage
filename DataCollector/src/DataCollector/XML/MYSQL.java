@@ -14,7 +14,7 @@ public class MYSQL {
 	private String password;
 	private int interval;
 
-	public MYSQL(){
+	public MYSQL() {
 
 	}
 
@@ -49,7 +49,7 @@ public class MYSQL {
 	public synchronized void setPort(int port) {
 		this.port = port;
 	}
-	
+
 	public synchronized String getUser() {
 		return user;
 	}

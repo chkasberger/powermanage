@@ -12,7 +12,7 @@ public class JSON {
 	private String password;
 	private int interval;
 
-	public JSON(){
+	public JSON() {
 
 	}
 

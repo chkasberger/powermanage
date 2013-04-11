@@ -9,10 +9,9 @@ package DataCollector.PV;
 
 import java.util.EventObject;
 
-
 /**
  * @author Kasberger.Christian
- *
+ * 
  */
 public class PVEvent extends EventObject {
 
@@ -26,4 +25,3 @@ public class PVEvent extends EventObject {
 		// TODO Auto-generated constructor stub
 	}
 }
-
