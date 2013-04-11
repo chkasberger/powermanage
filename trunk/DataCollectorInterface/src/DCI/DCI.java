@@ -1,3 +1,5 @@
+package DCI;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,48 +10,44 @@ import org.json.JSONObject;
 
 import DataCollector.JUtil;
 import DataCollector.DB.MySQLAccess;
-import DataCollector.XML.*;
+import DataCollector.XML.XmlConfigParser;
 
 public class DCI {
 
 	static Logger logger = Logger.getRootLogger();
-	//static Socket socket;
+	// static Socket socket;
 	static BufferedReader in;
-	static PrintWriter out;	
+	static PrintWriter out;
 	static XmlConfigParser config = new XmlConfigParser();
-	
+
 	/**
 	 * @param args
-	 * @throws InterruptedException 
-	 * @throws IOException 
-	 * @throws MalformedURLException 
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws MalformedURLException
 	 */
-	public static void main(String[] args){
-		
+	public static void main(String[] args) {
+
 		JUtil.setupLogger(args[1]);
-		
+
 		logger.debug("app startet");
-		
-		config.getConfig(args[0]);	
-		
+
+		config.getConfig(args[0]);
+
 		MySQLAccess mySQLAccess = new MySQLAccess(config.getMysql());
-		
-		while(new com.fastcgi.FCGIInterface().FCGIaccept()>= 0) {
+
+		while (new com.fastcgi.FCGIInterface().FCGIaccept() >= 0) {
 
 			System.out.println("Content-type: application/json\r\n");
-			//System.out.println("Content-type: text/plain\r\n");
-			
+			// System.out.println("Content-type: text/plain\r\n");
+
 			/*
-			System.out.println(
-					"<!DOCTYPE html>" +
-					"<html lang=\"en\">" +
-					"<head><TITLE>db query</TITLE></head>" +
-					"<body>"
-					);
-			*/
-			Object[] input = null; 
+			 * System.out.println( "<!DOCTYPE html>" + "<html lang=\"en\">" +
+			 * "<head><TITLE>db query</TITLE></head>" + "<body>" );
+			 */
+			Object[] input = null;
 			JSONObject jObject = null;
-			
+
 			try {
 
 				String queryString = System.getProperty("QUERY_STRING");
@@ -57,22 +55,21 @@ public class DCI {
 
 				jObject = mySQLAccess.Get(input);
 
-		   		System.out.println(jObject);
+				System.out.println(jObject);
 				System.out.flush();
-				logger.debug(input[0] + " " + input[1] + " " + input[2] + " " + input[3]);
+				//logger.debug(input[0] + " " + input[1] + " " + input[2] + " "
+				//		+ input[3]);
 				logger.debug(jObject);
-			
+
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				logger.error(e.getMessage());
-					
-				//e1.printStackTrace();
+				//logger.error(e.getStackTrace());
+				// e1.printStackTrace();
 			}
-		   	/*
-		   	System.out.println(
-		   			"</body>" +
-		   			"</html>");
-		   			*/
-	   }        	    		
+			/*
+			 * System.out.println( "</body>" + "</html>");
+			 */
+		}
 	}
 }

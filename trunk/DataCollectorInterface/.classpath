@@ -2,11 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/org.apache.log4j_1.2.15.v201012070815.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/workspace/trunk/DataCollectorConsole/lib/java-json.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/workspace/trunk/DataCollectorConsole/lib/pi4j-core-0.0.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Kasberger.Christian/workspace/trunk/DataCollectorConsole/lib/RXTXcomm.jar"/>
-	<classpathentry kind="lib" path="/DataCollectorConsole/src"/>
-	<classpathentry kind="lib" path="/DataCollectorConsole/lib/mysql-connector-java-5.1.22-bin.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DataCollector"/>
+	<classpathentry kind="lib" path="/DataCollector/lib/java-json.jar"/>
+	<classpathentry kind="lib" path="/DataCollector/lib/org.apache.log4j_1.2.15.v201012070815.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
