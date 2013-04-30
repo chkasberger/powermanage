@@ -258,7 +258,45 @@ public class MySQLAccess {
 		return pss;
 	}
 
-	public JSONObject Get(Object[] input) throws Exception {
+    public JSONObject Get(Object[] input) throws Exception {
+        
+        JSONObject jObject = null;
+        //JSONArray jArray = null;
+        String[][] selectedInterval = getInterval(input);
+                        
+        try {
+                
+                                
+                if(!dbConnection.isValid(0))
+                        Connect();
+
+                statement = dbConnection.createStatement();
+        
+                resultSet = statement.executeQuery
+                                ("SELECT * FROM " + dataBaseTable + " WHERE TIMESTAMP BETWEEN '" + 
+                                                selectedInterval[0][0] + " " + selectedInterval[0][1] + "' AND '" + 
+                                                selectedInterval[0][2] + " " + selectedInterval[0][3] + 
+                                                "' and (Time(TIMESTAMP) like '%:%" + selectedInterval[1][0] + ":%' " +
+                                                        "or Time(TIMESTAMP) like '%:%" + selectedInterval[1][1] + ":%'" +
+                                                        "or Time(TIMESTAMP) like '%:%" + selectedInterval[1][2] + ":%'" +
+                                                        "or Time(TIMESTAMP) like '%:%" + selectedInterval[1][3] + ":%');");     
+                
+                logger.debug("executed DB query");
+                //jObject = createJSONObject(resultSet);
+                jObject = createJSONObject(resultSet);
+
+        } catch (Exception e) {
+                logger.error(e.getMessage());
+        } finally {
+                statement.close();
+                resultSet.close();
+        }
+
+        return jObject;
+        //return jArray;
+    }
+    
+	public JSONObject Get(JSONObject jObj, boolean overload) throws Exception {
 
 		JSONObject jObject = null;
 		// JSONArray jArray = null;
@@ -269,33 +307,32 @@ public class MySQLAccess {
 
 			statement = dbConnection.createStatement();
 
-			if (((String) input[0]).toLowerCase().equals("last")) {
+			if (jObj.getBoolean("last")) {
 				resultSet = statement.executeQuery("SELECT * FROM "
 						+ dataBaseTable + " ORDER BY id DESC LIMIT 1;");
 
 			} else {
 
-				String[][] selectedInterval = getInterval(input);
+				String[] selectedInterval = getInterval(jObj.getInt("interval"), true);
 
-				resultSet = statement.executeQuery("SELECT * FROM "
+				resultSet = statement.executeQuery(
+						"SELECT * FROM "
 						+ dataBaseTable + " WHERE TIMESTAMP BETWEEN '"
-						+ selectedInterval[0][0] + " " + selectedInterval[0][1]
-						+ "' AND '" + selectedInterval[0][2] + " "
-						+ selectedInterval[0][3]
+						+ jObj.get("startDate") + " " + jObj.get("startTime")
+						+ "' AND '" 
+						+ jObj.get("endDate") + " " + jObj.get("endTime")
 						+ "' and (Time(TIMESTAMP) like '%:%"
-						+ selectedInterval[1][0] + ":%' "
-						+ "or Time(TIMESTAMP) like '%:%"
-						+ selectedInterval[1][1] + ":%'"
-						+ "or Time(TIMESTAMP) like '%:%"
-						+ selectedInterval[1][2] + ":%'"
-						+ "or Time(TIMESTAMP) like '%:%"
-						+ selectedInterval[1][3] + ":%');");
+						+ selectedInterval[0] + ":%'or Time(TIMESTAMP) like '%:%"
+						+ selectedInterval[1] + ":%'or Time(TIMESTAMP) like '%:%"
+						+ selectedInterval[2] + ":%'or Time(TIMESTAMP) like '%:%"
+						+ selectedInterval[3] + ":%');"
+						);
 			}
 
 			logger.debug("executed DB query");
-			// jObject = createJSONObject(resultSet);
-			jObject = createJSONObject(resultSet);
-
+				
+			jObject = createJSONObject(resultSet);			
+			
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			//logger.error(e.getStackTrace());
@@ -369,63 +406,90 @@ public class MySQLAccess {
 		return jObject;
 	}
 
-	private String[][] getInterval(Object[] input) {
-		String[] selectedInterval = new String[5];
+    private String[][] getInterval(Object[] input) {
+        String[] selectedInterval = new String[5];
 
-		{
-			if (input.length > 0
-					&& input[0].toString().matches(
-							"[0-9]{4}[/:-][0-9]{2}[/:-][0-9]{2}"))
-				selectedInterval[0] = input[0].toString();
-			else
-				selectedInterval[0] = "2013-01-11";
+        {
+                if(input.length > 0 && input[0].toString().matches("[0-9]{4}[/:-][0-9]{2}[/:-][0-9]{2}"))
+                        selectedInterval[0] = input[0].toString();
+                else
+                        selectedInterval[0] = "2013-01-11";
 
-			if (input.length > 1
-					&& input[1].toString().matches(
-							"[0-9]{2}[/:-][0-9]{2}[/:-][0-9]{2}"))
-				selectedInterval[1] = input[1].toString();
-			else
-				selectedInterval[1] = "12:00:00";
+                if(input.length > 1 && input[1].toString().matches("[0-9]{2}[/:-][0-9]{2}[/:-][0-9]{2}"))
+                        selectedInterval[1] = input[1].toString();
+                else
+                        selectedInterval[1] = "12:00:00";
 
-			if (input.length > 2
-					&& input[2].toString().matches(
-							"[0-9]{4}[/:-][0-9]{2}[/:-][0-9]{2}"))
-				selectedInterval[2] = input[2].toString();
-			else
-				selectedInterval[2] = "2013-01-11";
+                if(input.length > 2 && input[2].toString().matches("[0-9]{4}[/:-][0-9]{2}[/:-][0-9]{2}"))
+                        selectedInterval[2] = input[2].toString();
+                else
+                        selectedInterval[2] = "2013-01-11";
 
-			if (input.length > 3
-					&& input[3].toString().matches(
-							"[0-9]{2}[/:-][0-9]{2}[/:-][0-9]{2}"))
-				selectedInterval[3] = input[3].toString();
-			else
-				selectedInterval[3] = "13:00:59";
+                if(input.length > 3 && input[3].toString().matches("[0-9]{2}[/:-][0-9]{2}[/:-][0-9]{2}"))
+                        selectedInterval[3] = input[3].toString();
+                else
+                        selectedInterval[3] = "13:00:59";
 
-			if (input.length > 4 && input[4].toString().matches("[0-9]{1,2}"))
-				selectedInterval[4] = input[4].toString();
-			else
-				selectedInterval[4] = "1";
-		}
+                if(input.length > 4 && input[4].toString().matches("[0-9]{1,2}"))
+                        selectedInterval[4] = input[4].toString();
+                else
+                        selectedInterval[4] = "1";
+        }
 
+        String[] intervalMask = new String[]{"00", "00", "00", "00"};
+
+        switch (selectedInterval[4]) {
+        case "60":
+                intervalMask = new String[]{"00", "00", "00", "00"};
+                break;
+        case "30":
+                intervalMask = new String[]{"00", "00", "30", "00"};
+                break;
+        case "15":
+                intervalMask = new String[]{"00", "15", "30", "45"};
+                break;
+        case "10":
+                intervalMask = new String[]{"0", "00", "00", "00"};
+                break;
+        case "5":
+                intervalMask = new String[]{"0", "5", "00", "00"};
+                break;
+        case "1":
+                intervalMask = new String[]{"", "00", "00", "00"};
+                break;
+
+        default:
+                intervalMask = new String[]{"00", "15", "30", "45"};
+                break;
+        }
+        String[][] intervalSelection = new String[2][5];
+        System.arraycopy(selectedInterval, 0, intervalSelection[0], 0, selectedInterval.length);
+        System.arraycopy(intervalMask, 0, intervalSelection[1], 0, intervalMask.length);
+        
+        return intervalSelection;
+    }
+
+	private String[] getInterval(int interval, boolean overload) {
+		
 		String[] intervalMask = new String[] { "00", "00", "00", "00" };
 
-		switch (selectedInterval[4]) {
-		case "60":
+		switch (interval) {
+		case 60:
 			intervalMask = new String[] { "00", "00", "00", "00" };
 			break;
-		case "30":
+		case 30:
 			intervalMask = new String[] { "00", "00", "30", "00" };
 			break;
-		case "15":
+		case 15:
 			intervalMask = new String[] { "00", "15", "30", "45" };
 			break;
-		case "10":
+		case 10:
 			intervalMask = new String[] { "0", "00", "00", "00" };
 			break;
-		case "5":
+		case 5:
 			intervalMask = new String[] { "0", "5", "00", "00" };
 			break;
-		case "1":
+		case 1:
 			intervalMask = new String[] { "", "00", "00", "00" };
 			break;
 
@@ -433,13 +497,8 @@ public class MySQLAccess {
 			intervalMask = new String[] { "00", "15", "30", "45" };
 			break;
 		}
-		String[][] intervalSelection = new String[2][5];
-		System.arraycopy(selectedInterval, 0, intervalSelection[0], 0,
-				selectedInterval.length);
-		System.arraycopy(intervalMask, 0, intervalSelection[1], 0,
-				intervalMask.length);
-
-		return intervalSelection;
+		
+		return intervalMask;
 	}
 
 	// You need to close the resultSet
