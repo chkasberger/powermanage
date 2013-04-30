@@ -14,62 +14,70 @@ import DataCollector.XML.XmlConfigParser;
 
 public class DCI {
 
-	static Logger logger = Logger.getRootLogger();
-	// static Socket socket;
-	static BufferedReader in;
-	static PrintWriter out;
-	static XmlConfigParser config = new XmlConfigParser();
+        static Logger logger = Logger.getRootLogger();
+        // static Socket socket;
+        static BufferedReader in;
+        static PrintWriter out;
+        static XmlConfigParser config = new XmlConfigParser();
 
-	/**
-	 * @param args
-	 * @throws InterruptedException
-	 * @throws IOException
-	 * @throws MalformedURLException
-	 */
-	public static void main(String[] args) {
+        /**
+         * @param args
+         * @throws InterruptedException
+         * @throws IOException
+         * @throws MalformedURLException
+         */
+        public static void main(String[] args) {
 
-		JUtil.setupLogger(args[1]);
+                JUtil.setupLogger(args[1]);
 
-		logger.debug("app startet");
+                logger.debug("app startet");
 
-		config.getConfig(args[0]);
+                config.getConfig(args[0]);
 
-		MySQLAccess mySQLAccess = new MySQLAccess(config.getMysql());
+                MySQLAccess mySQLAccess = new MySQLAccess(config.getMysql());
 
-		while (new com.fastcgi.FCGIInterface().FCGIaccept() >= 0) {
+                while (new com.fastcgi.FCGIInterface().FCGIaccept() >= 0) {
 
-			System.out.println("Content-type: application/json\r\n");
-			// System.out.println("Content-type: text/plain\r\n");
+                        System.out.println("Content-type: application/json\r\n");
+                        // System.out.println("Content-type: text/plain\r\n");
 
-			/*
-			 * System.out.println( "<!DOCTYPE html>" + "<html lang=\"en\">" +
-			 * "<head><TITLE>db query</TITLE></head>" + "<body>" );
-			 */
-			Object[] input = null;
-			JSONObject jObject = null;
+                        /*
+                         * System.out.println( "<!DOCTYPE html>" + "<html lang=\"en\">" +
+                         * "<head><TITLE>db query</TITLE></head>" + "<body>" );
+                         */
+                        //Object[] input = null;
+                        String inputString = null;
+                        JSONObject jObject = null;
 
-			try {
+                        try {
+                                /*String queryString = System.getProperty("QUERY_STRING");
+                                input = queryString.split("[ _T]");
 
-				String queryString = System.getProperty("QUERY_STRING");
-				input = queryString.split("[ _T]");
+                                jObject = mySQLAccess.Get(input);
 
-				jObject = mySQLAccess.Get(input);
+                                System.out.println(jObject);
+                                System.out.flush();
+                                logger.debug(jObject);
+                                */
+                                inputString = System.getProperty("QUERY_STRING");
+                                inputString = inputString.replace("%22", "\"");
+                                inputString = inputString.replace("&", "");
+                				JSONObject jObj = new JSONObject(inputString);						
+                				
+                				jObject = mySQLAccess.Get(jObj,true);
+                				System.out.println(jObject);
+                				System.out.flush();
 
-				System.out.println(jObject);
-				System.out.flush();
-				//logger.debug(input[0] + " " + input[1] + " " + input[2] + " "
-				//		+ input[3]);
-				logger.debug(jObject);
 
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				logger.error(e.getMessage());
-				//logger.error(e.getStackTrace());
-				// e1.printStackTrace();
-			}
-			/*
-			 * System.out.println( "</body>" + "</html>");
-			 */
-		}
-	}
+                        } catch (Exception e) {
+                                // TODO Auto-generated catch block
+                                logger.error(e.getMessage());
+                                //logger.error(e.getStackTrace());
+                                // e1.printStackTrace();
+                        }
+                        /*
+                         * System.out.println( "</body>" + "</html>");
+                         */
+                }
+        }
 }
