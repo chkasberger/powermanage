@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<html>
+<head>
+    <title>Ziontrains</title>
+    <div name='canvas_loadProfile' style="text-align: right">
+        <canvas id='cvs_load' width=700" height="450" style="background-color: white;">[No canvas support]</canvas>
+    </div>
+    <div name='canvas_power' style="text-align: right">
+        <canvas id='cvs_power' width=200" height="400" style="background-color: white;">[No canvas support]</canvas>
+    </div>
+    <div id="container" style="width:100%; height:400px;"></div>
+    <div name='includes' id="extern">
+        <!--script src="./js/util.js"></script-->
+        <script src="./js/moment.js"></script>
+
+        <!--script src="http://code.jquery.com/jquery-1.9.1.min.js"></script-->
+        <!--script src="http://code.jquery.com/jquery-1.9.1.js"></script-->
+        <script src="./js/jquery-1.9.1.js"></script>
+        <!--script src="js/dojo-release-1.8.3/dojo/dojo.js"></script-->
+    </div>
+    <div name='includes' id="rgraph">
+        <script src="./js/rgraph/libraries/RGraph.common.core.js"></script>
+        <script src="./js/rgraph/libraries/RGraph.common.dynamic.js"></script>   <!-- Just needed for dynamic features (eg tooltips) -->
+
+        <script src="./js/rgraph/libraries/RGraph.common.annotate.js"></script>  <!-- Just needed for annotating -->
+        <script src="./js/rgraph/libraries/RGraph.common.context.js"></script>   <!-- Just needed for context menus -->
+        <script src="./js/rgraph/libraries/RGraph.common.effects.js"></script>   <!-- Just needed for visual effects -->
+        <script src="./js/rgraph/libraries/RGraph.common.key.js"></script>       <!-- Just needed for keys -->
+        <script src="./js/rgraph/libraries/RGraph.common.resizing.js"></script>  <!-- Just needed for resizing -->
+        <script src="./js/rgraph/libraries/RGraph.common.tooltips.js"></script>  <!-- Just needed for tooltips -->
+        <script src="./js/rgraph/libraries/RGraph.common.zoom.js"></script>      <!-- Just needed for zoom -->
+
+        <script src="./js/rgraph/libraries/RGraph.bar.js"></script>              <!-- Just needed for Bar charts -->
+        <script src="./js/rgraph/libraries/RGraph.bipolar.js"></script>          <!-- Just needed for Bi-polar charts -->
+        <script src="./js/rgraph/libraries/RGraph.cornergauge.js"></script>      <!-- Just needed for CornerGauge charts -->
+        <script src="./js/rgraph/libraries/RGraph.fuel.js"></script>             <!-- Just needed for Fuel charts -->
+        <script src="./js/rgraph/libraries/RGraph.funnel.js"></script>           <!-- Just needed for Funnel charts -->
+        <script src="./js/rgraph/libraries/RGraph.gantt.js"></script>            <!-- Just needed for Gantt charts -->
+        <script src="./js/rgraph/libraries/RGraph.gauge.js"></script>            <!-- Just needed for Gauge charts -->
+        <script src="./js/rgraph/libraries/RGraph.hbar.js"></script>             <!-- Just needed for Horizontal Bar charts -->
+        <script src="./js/rgraph/libraries/RGraph.hprogress.js"></script>        <!-- Just needed for Porizontal Progress bars -->
+        <script src="./js/rgraph/libraries/RGraph.led.js"></script>              <!-- Just needed for LED charts -->
+        <script src="./js/rgraph/libraries/RGraph.line.js"></script>             <!-- Just needed for Line charts -->
+        <script src="./js/rgraph/libraries/RGraph.meter.js"></script>            <!-- Just needed for Meter charts -->
+        <script src="./js/rgraph/libraries/RGraph.odo.js"></script>              <!-- Just needed for Odometers -->
+        <script src="./js/rgraph/libraries/RGraph.pie.js"></script>              <!-- Just needed for Pie AND Donut charts -->
+        <script src="./js/rgraph/libraries/RGraph.radar.js"></script>            <!-- Just needed for Radar charts -->
+        <script src="./js/rgraph/libraries/RGraph.rose.js"></script>             <!-- Just needed for Rose charts -->
+        <script src="./js/rgraph/libraries/RGraph.rscatter.js"></script>         <!-- Just needed for Rscatter charts -->
+        <script src="./js/rgraph/libraries/RGraph.scatter.js"></script>          <!-- Just needed for Scatter charts -->
+        <script src="./js/rgraph/libraries/RGraph.thermometer.js"></script>      <!-- Just needed for Thermometer charts -->
+        <script src="./js/rgraph/libraries/RGraph.vprogress.js"></script>        <!-- Just needed for Vertical Progress bars -->
+        <script src="./js/rgraph/libraries/RGraph.waterfall.js"></script>        <!-- Just needed for Waterfall charts  -->
+
+    </div>
+    <div name='includes' id="highcharts">
+        <!--script src="/js/jquery.min.js"></script-->
+        <!--script src="/js/highcharts.js"></script-->
+        <script src="/js/highstock.js"></script>
+        <script src="/js/modules/exporting.js"></script>
+    </div>
+    <div name='functions'>
+
+        <script>
+            window.onload = function (e)
+            {
+
+                var queryString;
+                //queryString = 'dci?2013-04-22T00:00:00_2013-04-23T00:00:00_60';
+                queryString = '2013-04-25T10:00:00_2013-04-25T11:00:00_60';
+                //queryString = 'dci?last';
+
+                var fcgi = 'dci';
+
+                var query_string = {
+                    'startDate' :   '2013-05-02',
+                    'endDate' :     '2013-05-02',
+                    'startTime' :   '00:00:00',
+                    'endTime' :     '23:59:00',
+                    'interval' :    '1',
+                    'last' :        'false'
+                };
+
+                $.get(fcgi, JSON.stringify(query_string), function(result){
+                //$.get(fcgi, queryString, function(result){
+                    myCallback(result, query_string);
+                });
+                //setTimeout(window.onload, 2000); // 2000 milliseconds = 2 seconds
+
+            }
+
+            function myCallback(result, query_string){
+                var selection = [1,4,-5,-8,12];
+
+                console.debug("fooBar3");
+                console.debug(result);
+                var timestamp = result.timestamp;
+                var units = result.units;
+                var values = result.values;
+
+                var labelName = [];
+                var labelValues = [];
+                labelName = parseArray(units, 1, false);
+                labelValues = parseArray(values, 1, false);
+
+                /*var optimizeLabelValues = function (x, idx) {
+                 document.writeln('['+idx+'] = '+x);
+                 }
+                 var myArray = [1,'two',3,'four',5];
+                 myArray.forEach(optimizeLabelValues); // outputs: [0] = 1 [1] = two [2] = 3 [3] = four [4] = 5
+                 */
+
+                var lineLegend = [];
+                var lineValues = [];
+                var lineShadow = [];
+
+                for(var i = 0; i < selection.length; i++){
+                    if(selection[i] != 1){
+                        lineLegend.push(parseArray(units, selection[i], false).pop());
+                        lineValues.push(parseArray(values, selection[i], true));
+                        lineShadow.push('black');
+                    }
+                }
+
+                console.debug(lineLegend);
+
+                //$.each(values, function(nextArray) {
+                //var line = new RGraph.Line('cvs_load', [31,25,23,41,35,36,56,66,46,13,32,41], [45,12,83,53,52,54,12,32,65,98,87,86])
+                var graphData = [];
+                for(var i = 0; i < lineValues.length; i++){
+                    if(lineValues[i]==-1){
+                        graphData.push(0);
+                    }
+                    else{
+                        graphData.push(lineValues[i]);
+                    }
+                }
+
+                var xUTC = Number(moment(values[0][1].substring(0,16)));
+
+
+
+                $('#container').highcharts("StockChart", {
+                    chart: {
+
+                    },
+                    title: {
+                        text: 'Energy Load Profile'
+                    },
+                    rangeSelector: {
+                        selected: 4
+                    },
+//                        xAxis: {
+                    //                          categories: labelValues
+                    //                    },
+                    xAxis: {
+                        type: 'datetime',
+                        dateTimeLabelFormats: {
+                            day: '%e of %b'
+                        }
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Power'
+                        }
+                    },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                enabled: false,
+                                states: {
+                                    hover: {
+                                        enabled: true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 2,
+                        color: 'silver'
+                    }],
+                    series: [{
+                        name: lineLegend[0],
+                        data: graphData[0],
+                        pointStart: xUTC,
+                        pointInterval: query_string.interval * 60 * 1000 // one day
+                    },{
+                        name: lineLegend[1],
+                        data: graphData[1],
+                        pointStart: xUTC,
+                        pointInterval: query_string.interval * 60 * 1000 // one day
+                    }, {
+                        name: lineLegend[2],
+                        data: graphData[2],
+                        pointStart: xUTC,
+                        pointInterval: query_string.interval * 60 * 1000 // one day
+                    }, {
+                        name: lineLegend[3],
+                        data: graphData[3],
+                        pointStart: xUTC,
+                        pointInterval: query_string.interval * 60 * 1000 // one day
+                    }]
+                });
+
+
+
+            };
+
+        </script>
+        <script>
+            function drawRose()
+            {
+                // The data to be shown on the Rose chart.
+                var data = [41,37,16,3,3];
+
+                // To show a stacked Rose chart you specify the data like this. non-equi-angular
+                // Rose charts are very similar to this but with only two elements to
+                // each array - the magnitude of the segment and the size of the angle.
+                var rose = new RGraph.Rose('cvs_power', [[1,15], [6,8], [4,3]]);
+
+                // Create the rose chart.
+                //var rose = new RGraph.Rose('cvs_power', data);
+
+                // Configure the chart to look as you want.
+                rose.Set('chart.labels', ['MSIE 7 (41%)', 'MSIE 6 (37%)', 'Firefox (16%)', 'Safari (3%)', 'Other (3%)']);
+
+                // Now call the .Draw() method to draw the chart.
+                rose.Draw();
+            }
+        </script>
+
+        <script>
+            function drawBar(){
+                // Some data that is to be shown on the bar chart. To show a stacked or grouped chart
+                // each number should be an array of further numbers instead.
+                var data = [-100];
+
+
+                // An example of the data used by stacked and grouped charts
+                // var data = [[1,5,6], [4,5,3], [7,8,9]]
+
+
+                // Create the br chart. The arguments are the ID of the canvas tag and the data
+                var bar = new RGraph.Bar('cvs_power', data);
+
+
+                // Now configure the chart to appear as wanted by using the .Set() method.
+                // All available properties are listed below.
+                bar.Set('chart.labels', ['Power']);
+                //bar.Set('chart.gutter.left', -45);
+                bar.Set('chart.background.barcolor1', 'white');
+                bar.Set('chart.background.barcolor2', 'white');
+                bar.Set('chart.background.grid', true);
+                bar.Set('chart.colors', ['red']);
+                bar.Set('chart.xaxispos', 'center');
+                //RGraph.Redraw();
+
+                // Now call the .Draw() method to draw the chart
+                bar.Draw();
+            }
+        </script>
+        <script>
+
+            function drawProgress()
+            {
+                var vprogress = new RGraph.VProgress('cvs_power', 10,100);
+                vprogress.Set('chart.tickmarks', 100);
+                vprogress.Set('chart.numticks', 20);
+                //vprogress.Set('chart.max', 100);
+                vprogress.Set('chart.min', -50);
+                vprogress.Draw();
+            }
+
+        </script>
+        <script name='parseArray'>
+            function parseArray(twoDimArray, position, isNumber)
+            {
+                //console.debug(twoDimArray.length);
+                //console.debug(position);
+
+                var sign = 1.0;
+
+                var data = [];
+
+                if(position < 0){
+                    sign = -1.0;
+                    position = position * sign;
+                }
+
+                for(var oneDimArray = 0; oneDimArray < twoDimArray.length; oneDimArray++){
+                    var values = twoDimArray[oneDimArray];
+                    //console.debug(values);
+                    //console.debug(values[position]);
+                    if(isNumber){
+                        var tmp = parseFloat(values[position]);
+                        if(tmp!=-1){
+                            data.push(sign * parseFloat(values[position]));
+                        }
+                        else{
+                            data.push(0);
+                        }
+                        //data.push(parseInt(values[position]));
+                    }else{
+                        data.push(values[position]);
+                    }
+                }
+                return data;
+            }
+        </script>
+    </div>
+</head>
+<body>
+<div>
+    <a href="http://www.rgraph.net/">RGraph</a>
+</div>
+</body>
+</html>
