@@ -19,9 +19,14 @@ public class D0 {
 	private StopBits stopBits = StopBits.ONE;
 	private int maxBaudRate = 9600;
 	private int interval = 60;
+	private String[] obis;
 
 	public D0() {
 
+	}
+
+	public D0(D0 d0) {
+		// TODO Auto-generated constructor stub
 	}
 
 	public int getBaudRate() {
@@ -86,5 +91,13 @@ public class D0 {
 
 	public synchronized void setInterval(int interval) {
 		this.interval = interval;
+	}
+
+	public synchronized String[] getObis() {
+		return obis;
+	}
+	
+	public synchronized void setObis(String[] obis) {
+		this.obis = obis;
 	}
 }

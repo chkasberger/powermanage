@@ -16,8 +16,8 @@ CREATE DATABASE logdata;
 
 mysql -u root -proot
 USE logdata;
-DROP TABLE IF EXISTS sg3;
-CREATE TABLE sg3(
+DROP TABLE IF EXISTS sg;
+CREATE TABLE sg(
 	id int not null primary key auto_increment,
 	TIMESTAMP DATETIME,
 	EM_1_8_0 DECIMAL(9,3),
@@ -33,7 +33,7 @@ CREATE TABLE sg3(
 	HP_PAC DECIMAL(9,3),
 	HP_TOTAL_ENERGY DECIMAL(9,3)
 	);
-INSERT INTO sg3 VALUES (
+INSERT INTO sg VALUES (
 	default,
 	'12-12-07 07:08:09',
 	'100000.001',
@@ -50,6 +50,74 @@ INSERT INTO sg3 VALUES (
 	'100000.001'
 	);
 
+...........................................................................................................
+
+mysql -u root -proot
+USE logdata;
+DROP TABLE IF EXISTS sg;
+CREATE TABLE sg(
+	id int not null primary key auto_increment,
+	TIMESTAMP DATETIME,
+	EM_1_7_0 DECIMAL(9,3),
+	EM_2_7_0 DECIMAL(9,3),
+	PV_PAC DECIMAL(9,3),
+	HP_PAC DECIMAL(9,3)
+	);
+INSERT INTO sg VALUES (
+	default,
+	'12-12-07 07:08:09',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001'
+	);
+	
+...........................................................................................................
+
+mysql -u root -p\!root
+USE logdata;
+DROP TABLE IF EXISTS sg_ph;
+CREATE TABLE sg_ph(
+	id int not null primary key auto_increment,
+	TIMESTAMP DATETIME,
+	EM_32_7 DECIMAL(9,3),
+	EM_52_7 DECIMAL(9,3),
+	EM_72_7 DECIMAL(9,3),
+	EM_31_7 DECIMAL(9,3),
+	EM_51_7 DECIMAL(9,3),
+	EM_71_7 DECIMAL(9,3),
+	EM_91_7 DECIMAL(9,3),
+	EM_81_7_4 DECIMAL(9,3),
+	EM_81_7_15 DECIMAL(9,3),
+	EM_81_7_26 DECIMAL(9,3),
+	PV_IAC_L1 DECIMAL(9,3),
+	PV_IAC_L2 DECIMAL(9,3),
+	PV_IAC_L3 DECIMAL(9,3),
+	PV_UAC_L1 DECIMAL(9,3),
+	PV_UAC_L2 DECIMAL(9,3),
+	PV_UAC_L3 DECIMAL(9,3)	
+	);
+INSERT INTO sg_ph VALUES (
+	default,
+	'12-12-07 07:08:09',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001',
+	'100000.001'
+	);
+	
 ...........................................................................................................
 
 DROP USER DataCollector@localhost;

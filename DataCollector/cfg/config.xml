@@ -2,6 +2,7 @@
 <config>
     <interface type="JSON">
     	<url>http://solar/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System</url>	
+    	<url3p>http://solar/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System</url3p>	
 		<interval>60</interval>
     </interface>
     <interface type="D0">
@@ -24,9 +25,14 @@
 		<hostname>localhost</hostname>
 		<database>logdata</database>
 		<port>56665</port>  
-		<table>sg3</table>
+		<table>sg</table>
+		<table3p>sg</table3p>
 		<user>DataCollector</user>
 		<password>collect</password>
 		<interval>60</interval>
+		<obis>
+			1.8.0,
+			2.8.0,
+			</obis>
 	</interface>
 </config>

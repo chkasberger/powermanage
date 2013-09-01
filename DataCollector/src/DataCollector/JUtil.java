@@ -10,10 +10,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 
-import org.apache.log4j.ConsoleAppender;
+//import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.SimpleLayout;
+//import org.apache.log4j.PropertyConfigurator;
+//import org.apache.log4j.SimpleLayout;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  * @author User
@@ -57,7 +59,7 @@ public class JUtil {
 				logLevel = Level.OFF;
 				break;
 			default:
-				logLevel = Level.ERROR;
+				logLevel = Level.DEBUG;
 				break;
 			}
 		} else {
@@ -67,10 +69,20 @@ public class JUtil {
 		// logLevel = Level.DEBUG;
 		// ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF:
 		try {
-			SimpleLayout layout = new SimpleLayout();
-			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+			//SimpleLayout layout = new SimpleLayout();
+			
+			//ConsoleAppender consoleAppender = new ConsoleAppender(layout);
 			logger.setLevel(logLevel);
-			logger.addAppender(consoleAppender);
+			//logger.addAppender(consoleAppender);
+			
+			
+			//String homeDir = context.getRealPath("/");
+	        File propertiesFile = new File("/home/pi/src/log4j.properties");
+	        PropertyConfigurator.configure(propertiesFile.toString());
+	        //logger.info("This is a test");
+	        
+	        
+	        
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

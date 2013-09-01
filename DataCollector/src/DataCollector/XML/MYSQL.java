@@ -9,6 +9,7 @@ public class MYSQL {
 	private String hostname;
 	private String database;
 	private String table;
+	private String table3p;
 	private int port;
 	private String user;
 	private String password;
@@ -40,6 +41,14 @@ public class MYSQL {
 
 	public synchronized void setTable(String table) {
 		this.table = table;
+	}
+
+	public synchronized String getTable3p() {
+		return table3p;
+	}
+
+	public synchronized void setTable3p(String table3p) {
+		this.table3p = table3p;
 	}
 
 	public synchronized int getPort() {
